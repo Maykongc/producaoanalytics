@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
+import { toPng } from "html-to-image";
 import {
   BarChart, Bar, XAxis, YAxis, ResponsiveContainer, ReferenceLine, Tooltip, LabelList, CartesianGrid,
 } from "recharts";
@@ -317,16 +318,59 @@ function ChartCard({
   meta: number;
 }) {
   const height = Math.max(220, data.length * 36 + 80);
+  const ref = useRef<HTMLDivElement>(null);
+  const [copyState, setCopyState] = useState<"idle" | "copying" | "done" | "err">("idle");
+
+  async function copyChart() {
+    if (!ref.current) return;
+    setCopyState("copying");
+    try {
+      const dataUrl = await toPng(ref.current, {
+        pixelRatio: 3,
+        backgroundColor: "#ffffff",
+        cacheBust: true,
+      });
+      const blob = await (await fetch(dataUrl)).blob();
+      if (navigator.clipboard && "write" in navigator.clipboard && typeof ClipboardItem !== "undefined") {
+        await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
+        setCopyState("done");
+      } else {
+        const a = document.createElement("a");
+        a.href = dataUrl;
+        a.download = `${title}.png`;
+        a.click();
+        setCopyState("done");
+      }
+      setTimeout(() => setCopyState("idle"), 1800);
+    } catch {
+      setCopyState("err");
+      setTimeout(() => setCopyState("idle"), 2200);
+    }
+  }
+
   return (
     <div className="rounded-xl border bg-card p-5 shadow-sm">
-      <div className="mb-1 flex items-baseline justify-between">
+      <div className="mb-1 flex items-baseline justify-between gap-3">
         <h3 className="text-base font-semibold">{title}</h3>
+        <button
+          onClick={copyChart}
+          disabled={data.length === 0 || copyState === "copying"}
+          className="rounded-md border bg-background px-3 py-1.5 text-xs font-medium hover:bg-accent disabled:opacity-50"
+          title="Copiar gráfico para a área de transferência"
+        >
+          {copyState === "copying" ? "Copiando…"
+            : copyState === "done" ? "Copiado ✓"
+            : copyState === "err" ? "Erro ao copiar"
+            : "Copiar gráfico"}
+        </button>
       </div>
       <p className="mb-4 text-xs text-muted-foreground">{subtitle}</p>
       {data.length === 0 ? (
         <div className="py-12 text-center text-sm text-muted-foreground">Sem dados no intervalo.</div>
       ) : (
-        <div style={{ width: "100%", height }}>
+        <div ref={ref} className="bg-card p-3" style={{ width: "100%", height: height + 60 }}>
+          <div className="mb-2 text-center text-sm font-semibold">{subtitle}</div>
+          <div style={{ width: "100%", height }}>
           <ResponsiveContainer>
             <BarChart data={data} layout="vertical" margin={{ left: 24, right: 36, top: 8, bottom: 24 }}>
               <CartesianGrid horizontal={false} stroke="var(--border)" />
@@ -334,7 +378,7 @@ function ChartCard({
               <YAxis
                 type="category"
                 dataKey="separador"
-                width={120}
+                width={180}
                 tick={{ fontSize: 11, fill: "var(--foreground)" }}
               />
               <Tooltip
@@ -349,6 +393,7 @@ function ChartCard({
               </Bar>
             </BarChart>
           </ResponsiveContainer>
+          </div>
         </div>
       )}
     </div>

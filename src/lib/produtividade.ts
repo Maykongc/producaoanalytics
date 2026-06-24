@@ -25,6 +25,7 @@ function normalizeKey(k: string) {
     .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^\w\s]/g, "")
     .replace(/\s+/g, "_");
 }
 
@@ -108,13 +109,27 @@ export interface Prepared {
 
 const ENDERECO_CANDIDATES = ["endereco", "endereco_picking", "end_picking", "rua", "posicao", "local", "endereco_separacao"];
 
+const QT_CANDIDATES = ["qt_separada", "quantidade_separada", "qtd_separada"];
+const DT_CANDIDATES = ["dt_separacao", "data_separacao", "data_hora_separacao"];
+const NOME_CANDIDATES = ["separador", "nome_separador", "rotulo_separador"];
+const COD_CANDIDATES = ["codigo_separador", "cod_separador", "cd_separador", "matricula"];
+
+function pick(obj: Row, cands: string[]): string | null {
+  for (const c of cands) if (c in obj) return c;
+  return null;
+}
+
 export function prepare(rawRows: Row[]): Prepared {
   const rows = normalizeRows(rawRows);
   const missing: string[] = [];
   const first = rows[0] ?? {};
-  if (!("qt_separada" in first)) missing.push("qt_separada");
-  if (!("dt_separacao" in first)) missing.push("dt_separacao");
-  if (!("rotulo_separador" in first)) missing.push("rotulo_separador");
+  const qtKey = pick(first, QT_CANDIDATES);
+  const dtKey = pick(first, DT_CANDIDATES);
+  const nomeKey = pick(first, NOME_CANDIDATES);
+  const codKey = pick(first, COD_CANDIDATES);
+  if (!qtKey) missing.push("Qt. Separada");
+  if (!dtKey) missing.push("Dt. Separação");
+  if (!nomeKey && !codKey) missing.push("Separador");
 
   let enderecoField: string | null = null;
   for (const c of ENDERECO_CANDIDATES) {
@@ -122,11 +137,14 @@ export function prepare(rawRows: Row[]): Prepared {
   }
 
   const prepared: Prepared["rows"] = [];
+  if (missing.length) return { rows: prepared, enderecoField, missing };
   for (const r of rows) {
-    const dt = parseDate(r["dt_separacao"]);
+    const dt = parseDate(r[dtKey!]);
     if (!dt) continue;
-    const qt = toInt(r["qt_separada"]);
-    const sep = String(r["rotulo_separador"] ?? "").trim() || "—";
+    const qt = toInt(r[qtKey!]);
+    const cod = codKey ? String(r[codKey] ?? "").trim() : "";
+    const nome = nomeKey ? String(r[nomeKey] ?? "").trim() : "";
+    const sep = (cod && nome) ? `${cod} - ${nome}` : (cod || nome || "—");
     const horaInicio = new Date(dt.getFullYear(), dt.getMonth(), dt.getDate(), dt.getHours());
     const diaInicio = new Date(dt.getFullYear(), dt.getMonth(), dt.getDate());
     prepared.push({
