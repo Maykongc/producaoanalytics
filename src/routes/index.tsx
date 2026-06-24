@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
+import { toPng } from "html-to-image";
 import {
   BarChart, Bar, XAxis, YAxis, ResponsiveContainer, ReferenceLine, Tooltip, LabelList, CartesianGrid,
 } from "recharts";
