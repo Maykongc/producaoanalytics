@@ -12,9 +12,9 @@ import {
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Produtividade por Hora — Separação" },
+      { title: "Produtividade - Separação" },
       { name: "description", content: "Dashboard de produtividade de separação por hora e por dia a partir de Excel." },
-      { property: "og:title", content: "Produtividade por Hora — Separação" },
+      { property: "og:title", content: "Produtividade - Separação" },
       { property: "og:description", content: "Dashboard de produtividade de separação por hora e por dia." },
     ],
   }),
@@ -109,7 +109,7 @@ function Index() {
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/></svg>
           </div>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">Produtividade por Hora — Separação</h1>
+            <h1 className="text-2xl font-bold tracking-tight">Produtividade - Separação</h1>
             <p className="mt-0.5 text-sm text-muted-foreground">
               Faça upload da planilha, defina os filtros e analise o desempenho dos separadores.
             </p>
