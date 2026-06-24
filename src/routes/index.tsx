@@ -155,7 +155,7 @@ function Index() {
               />
             </div>
 
-            <div className="md:col-span-3">
+            <div className="md:col-span-6">
               <label className="mb-1 block text-xs font-medium text-muted-foreground">Intervalo 1 (hora)</label>
               <div className="flex items-center gap-2">
                 <input type="time" value={h1Start} onChange={(e) => setH1Start(e.target.value)} className="h-10 w-full rounded-md border bg-background px-3 text-sm" />
@@ -164,7 +164,7 @@ function Index() {
               </div>
             </div>
 
-            <div className="md:col-span-3">
+            <div className="md:col-span-6">
               <label className="mb-1 block text-xs font-medium text-muted-foreground">Intervalo 2 (dia)</label>
               <div className="flex items-center gap-2">
                 <input type="time" value={d2Start} onChange={(e) => setD2Start(e.target.value)} className="h-10 w-full rounded-md border bg-background px-3 text-sm" />
