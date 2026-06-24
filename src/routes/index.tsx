@@ -386,4 +386,3 @@ function fmt1(n: number) { return new Intl.NumberFormat("pt-BR", { minimumFracti
 function pad(n: number) { return n.toString().padStart(2, "0"); }
 function fmtHour(d: Date) { return `${pad(d.getHours())}:00`; }
 function fmtDay(d: Date) { return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}`; }
-}
