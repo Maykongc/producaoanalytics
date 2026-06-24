@@ -2,11 +2,11 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useRef, useState } from "react";
 import { toPng } from "html-to-image";
 import {
-  BarChart, Bar, XAxis, YAxis, ResponsiveContainer, ReferenceLine, Tooltip, LabelList, CartesianGrid,
+  BarChart, Bar, XAxis, YAxis, ResponsiveContainer, ReferenceLine, LabelList, CartesianGrid, Cell,
 } from "recharts";
 import {
-  parseExcel, prepare, rankByInterval, summaryByHour, summaryByDay, combineDateAndTime,
-  type Prepared,
+  parseExcel, prepare, rankByInterval, combineDateAndTime,
+  type Prepared, type RankItem,
 } from "@/lib/produtividade";
 
 export const Route = createFileRoute("/")({
@@ -81,8 +81,7 @@ function Index() {
     return {
       i1: rankByInterval(prepared.rows, i1Start, i1End),
       i2: rankByInterval(prepared.rows, i2Start, i2End),
-      sumHour: summaryByHour(prepared.rows, i2Start, i2End),
-      sumDay: summaryByDay(prepared.rows, i2Start, i2End),
+      i1Start, i1End, i2Start, i2End,
     };
   }, [prepared, calculated, date, h1Start, h1End, d2Start, d2End]);
 
@@ -211,53 +210,28 @@ function Index() {
 
         {result && !("err" in result) && (
           <>
-            <KpiRow
-              totalSeparado={result.i2.totalGeral}
-              separadoresAtivos={result.i2.separadoresAtivos}
-              media={result.i2.media}
+            <ChartReport
+              kind="hora"
+              headerTitle="Produtividade por Hora - Separação"
+              chartTitle={`Desempenho por separador (prod/h) - Intervalo 1 (Hora)`}
+              intervaloLabel={`${fmtDay(result.i1Start)} ${h1Start} às ${h1End}`}
+              ranking={result.i1.ranking}
+              media={result.i1.media}
+              total={result.i1.totalGeral}
+              separadoresAtivos={result.i1.separadoresAtivos}
               meta={meta}
             />
-
-            <div className="grid gap-6 lg:grid-cols-2">
-              <ChartCard
-                title="Desempenho por separador (prod/h)"
-                subtitle={`Intervalo 1 (Hora) — ${h1Start} às ${h1End}`}
-                data={result.i1.ranking}
-                media={result.i1.media}
-                meta={meta}
-              />
-              <ChartCard
-                title="Desempenho por separador (prod/h)"
-                subtitle={`Intervalo 2 (Dia) — ${d2Start} às ${d2End}`}
-                data={result.i2.ranking}
-                media={result.i2.media}
-                meta={meta}
-              />
-            </div>
-
-            <div className="grid gap-6 lg:grid-cols-2">
-              <SummaryTable
-                title="Resumo por hora"
-                head={["Hora", "Total", "Separadores", "Média/sep"]}
-                rows={result.sumHour.map((r) => [
-                  fmtHour(r.hora),
-                  fmtInt(r.total),
-                  String(r.separadoresAtivos),
-                  fmt1(r.media),
-                ])}
-              />
-              <SummaryTable
-                title="Resumo por dia"
-                head={["Dia", "Total", "Horas", "Separadores", "Prod/h"]}
-                rows={result.sumDay.map((r) => [
-                  fmtDay(r.dia),
-                  fmtInt(r.total),
-                  String(r.horas),
-                  String(r.separadoresAtivos),
-                  fmt1(r.prodHora),
-                ])}
-              />
-            </div>
+            <ChartReport
+              kind="dia"
+              headerTitle="Produtividade por Dia - Separação"
+              chartTitle={`Desempenho por separador (prod/h) - Intervalo 2 (Dia)`}
+              intervaloLabel={`${fmtDay(result.i2Start)}`}
+              ranking={result.i2.ranking}
+              media={result.i2.media}
+              total={result.i2.totalGeral}
+              separadoresAtivos={result.i2.separadoresAtivos}
+              meta={meta}
+            />
           </>
         )}
 
@@ -271,45 +245,22 @@ function Index() {
   );
 }
 
-function KpiRow({ totalSeparado, separadoresAtivos, media, meta }: {
-  totalSeparado: number; separadoresAtivos: number; media: number; meta: number;
-}) {
-  const diff = media - meta;
-  return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-      <Kpi label="Total separado" value={fmtInt(totalSeparado)} />
-      <Kpi label="Separadores ativos" value={String(separadoresAtivos)} />
-      <Kpi label="Média por separador (prod/h)" value={fmt1(media)} />
-      <Kpi label="Meta (prod/h)" value={fmt1(meta)} />
-      <Kpi
-        label="Diferença para meta"
-        value={(diff >= 0 ? "+" : "") + fmt1(diff)}
-        tone={diff >= 0 ? "positive" : "negative"}
-      />
-    </div>
-  );
-}
-
-function Kpi({ label, value, tone }: { label: string; value: string; tone?: "positive" | "negative" }) {
-  const toneCls = tone === "positive" ? "text-emerald-600" : tone === "negative" ? "text-destructive" : "text-foreground";
-  return (
-    <div className="rounded-xl border bg-card p-4 shadow-sm">
-      <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</div>
-      <div className={`mt-2 text-2xl font-semibold ${toneCls}`}>{value}</div>
-    </div>
-  );
-}
-
-function ChartCard({
-  title, subtitle, data, media, meta,
+function ChartReport({
+  kind, headerTitle, chartTitle, intervaloLabel, ranking, media, total, separadoresAtivos, meta,
 }: {
-  title: string;
-  subtitle: string;
-  data: { separador: string; prodHora: number; total: number; horasAtivas: number }[];
+  kind: "hora" | "dia";
+  headerTitle: string;
+  chartTitle: string;
+  intervaloLabel: string;
+  ranking: RankItem[];
   media: number;
+  total: number;
+  separadoresAtivos: number;
   meta: number;
 }) {
-  const height = Math.max(220, data.length * 36 + 80);
+  const mediaPorSep = separadoresAtivos > 0 ? total / separadoresAtivos : 0;
+  const data = [...ranking].sort((a, b) => b.total - a.total);
+  const height = Math.max(260, data.length * 28 + 120);
   const ref = useRef<HTMLDivElement>(null);
   const [copyState, setCopyState] = useState<"idle" | "copying" | "done" | "err">("idle");
 
@@ -329,7 +280,7 @@ function ChartCard({
       } else {
         const a = document.createElement("a");
         a.href = dataUrl;
-        a.download = `${title}.png`;
+        a.download = `${headerTitle}.png`;
         a.click();
         setCopyState("done");
       }
@@ -341,9 +292,8 @@ function ChartCard({
   }
 
   return (
-    <div className="rounded-xl border bg-card p-5 shadow-sm">
-      <div className="mb-1 flex items-baseline justify-between gap-3">
-        <h3 className="text-base font-semibold">{title}</h3>
+    <section className="rounded-xl border bg-card p-5 shadow-sm">
+      <div className="mb-3 flex items-center justify-end">
         <button
           onClick={copyChart}
           disabled={data.length === 0 || copyState === "copying"}
@@ -356,70 +306,98 @@ function ChartCard({
             : "Copiar gráfico"}
         </button>
       </div>
-      <p className="mb-4 text-xs text-muted-foreground">{subtitle}</p>
       {data.length === 0 ? (
         <div className="py-12 text-center text-sm text-muted-foreground">Sem dados no intervalo.</div>
       ) : (
-        <div ref={ref} className="bg-card p-3" style={{ width: "100%", height: height + 60 }}>
-          <div className="mb-2 text-center text-sm font-semibold">{subtitle}</div>
+        <div ref={ref} style={{ background: "#ffffff", padding: 24 }}>
+          <h2 style={{ textAlign: "center", fontSize: 20, fontWeight: 700, color: "#1f2937", margin: 0 }}>
+            {headerTitle}
+          </h2>
+          <h3 style={{ fontSize: 15, fontWeight: 700, color: "#111827", marginTop: 18, marginBottom: 4 }}>
+            Gráfico - Desempenho por separador (prod/h)
+          </h3>
+          <p style={{ textAlign: "center", fontSize: 12, color: "#374151", marginTop: 4, marginBottom: 8 }}>
+            {chartTitle}
+          </p>
           <div style={{ width: "100%", height }}>
-          <ResponsiveContainer>
-            <BarChart data={data} layout="vertical" margin={{ left: 24, right: 36, top: 8, bottom: 24 }}>
-              <CartesianGrid horizontal={false} stroke="var(--border)" />
-              <XAxis type="number" tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} />
-              <YAxis
-                type="category"
-                dataKey="separador"
-                width={180}
-                tick={{ fontSize: 11, fill: "var(--foreground)" }}
-              />
-              <Tooltip
-                cursor={{ fill: "var(--accent)" }}
-                contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12 }}
-                formatter={(v: number) => [v.toFixed(1), "prod/h"]}
-              />
-              <ReferenceLine x={meta} stroke="var(--chart-4)" strokeDasharray="4 4" label={{ value: `Meta ${meta.toFixed(1)}`, position: "top", fill: "var(--chart-4)", fontSize: 11 }} />
-              <ReferenceLine x={media} stroke="var(--chart-2)" strokeDasharray="2 4" label={{ value: `Média ${media.toFixed(1)}`, position: "insideTopRight", fill: "var(--chart-2)", fontSize: 11 }} />
-              <Bar dataKey="prodHora" fill="var(--primary)" radius={[0, 6, 6, 0]} barSize={20}>
-                <LabelList dataKey="prodHora" position="right" formatter={(v: number) => v.toFixed(1)} style={{ fontSize: 11, fill: "var(--foreground)" }} />
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
+            <ResponsiveContainer>
+              <BarChart data={data} layout="vertical" margin={{ left: 8, right: 60, top: 8, bottom: 40 }}>
+                <CartesianGrid horizontal={false} stroke="#e5e7eb" />
+                <XAxis
+                  type="number"
+                  tick={{ fontSize: 11, fill: "#374151" }}
+                  label={{ value: "Produtos por hora (prod/h)", position: "insideBottom", offset: -10, fill: "#374151", fontSize: 12 }}
+                />
+                <YAxis
+                  type="category"
+                  dataKey="separador"
+                  width={210}
+                  tick={{ fontSize: 10, fill: "#111827" }}
+                  interval={0}
+                />
+                <ReferenceLine
+                  x={meta}
+                  stroke="#ea8c2f"
+                  strokeDasharray="6 4"
+                  strokeWidth={1.5}
+                />
+                <ReferenceLine
+                  x={media}
+                  stroke="#2f6fea"
+                  strokeDasharray="2 4"
+                  strokeWidth={1.5}
+                />
+                <Bar dataKey="total" radius={[0, 2, 2, 0]} barSize={16}>
+                  {data.map((d, i) => (
+                    <Cell key={i} fill={d.prodHora >= meta ? "#3aa84a" : "#d94a4a"} />
+                  ))}
+                  <LabelList
+                    dataKey="enderecos"
+                    position="insideLeft"
+                    formatter={(v: number) => `${v} end.`}
+                    style={{ fontSize: 10, fill: "#ffffff", fontWeight: 600 }}
+                  />
+                  <LabelList
+                    dataKey="total"
+                    position="right"
+                    formatter={(v: number) => `${fmtInt(v)} prod`}
+                    style={{ fontSize: 10, fill: "#111827" }}
+                  />
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
           </div>
+          <div style={{ display: "flex", justifyContent: "flex-end", gap: 16, fontSize: 11, color: "#374151", marginTop: -8 }}>
+            <span><span style={{ display: "inline-block", width: 18, borderTop: "2px dashed #ea8c2f", verticalAlign: "middle", marginRight: 6 }} />Meta: {fmt1(meta)} prod/h</span>
+            <span><span style={{ display: "inline-block", width: 18, borderTop: "2px dotted #2f6fea", verticalAlign: "middle", marginRight: 6 }} />Média geral: {fmt1(media)} prod/h</span>
+          </div>
+          <h3 style={{ fontSize: 15, fontWeight: 700, color: "#111827", marginTop: 18, marginBottom: 8 }}>
+            {kind === "hora" ? "Resumo por hora" : "Resumo por dia"}
+          </h3>
+          <table style={{ borderCollapse: "collapse", fontSize: 11, color: "#111827" }}>
+            <thead>
+              <tr>
+                {["intervalo", "qt_separada_total", "qt_separadores_ativos", "qt_separada_media_por_sep"].map((h) => (
+                  <th key={h} style={{ border: "1px solid #cbd5e1", padding: "6px 10px", background: "#f1f5f9", fontWeight: 600 }}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style={{ border: "1px solid #cbd5e1", padding: "6px 10px", textAlign: "center" }}>{intervaloLabel}</td>
+                <td style={{ border: "1px solid #cbd5e1", padding: "6px 10px", textAlign: "center" }}>{fmtInt(total)}</td>
+                <td style={{ border: "1px solid #cbd5e1", padding: "6px 10px", textAlign: "center" }}>{separadoresAtivos}</td>
+                <td style={{ border: "1px solid #cbd5e1", padding: "6px 10px", textAlign: "center" }}>{fmt1(mediaPorSep)}</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       )}
-    </div>
-  );
-}
-
-function SummaryTable({ title, head, rows }: { title: string; head: string[]; rows: string[][] }) {
-  return (
-    <div className="rounded-xl border bg-card p-5 shadow-sm">
-      <h3 className="mb-3 text-base font-semibold">{title}</h3>
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b text-left text-xs uppercase tracking-wide text-muted-foreground">
-              {head.map((h) => <th key={h} className="py-2 pr-3 font-medium">{h}</th>)}
-            </tr>
-          </thead>
-          <tbody>
-            {rows.length === 0 ? (
-              <tr><td colSpan={head.length} className="py-6 text-center text-muted-foreground">Sem dados.</td></tr>
-            ) : rows.map((r, i) => (
-              <tr key={i} className="border-b last:border-0">
-                {r.map((c, j) => <td key={j} className="py-2 pr-3 tabular-nums">{c}</td>)}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
+    </section>
   );
 }
 
 function fmtInt(n: number) { return new Intl.NumberFormat("pt-BR").format(Math.round(n)); }
 function fmt1(n: number) { return new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(n); }
 function pad(n: number) { return n.toString().padStart(2, "0"); }
-function fmtHour(d: Date) { return `${pad(d.getHours())}:00`; }
 function fmtDay(d: Date) { return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}`; }
