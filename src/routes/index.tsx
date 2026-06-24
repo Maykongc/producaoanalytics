@@ -2,11 +2,11 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useRef, useState } from "react";
 import { toPng } from "html-to-image";
 import {
-  BarChart, Bar, XAxis, YAxis, ResponsiveContainer, ReferenceLine, Tooltip, LabelList, CartesianGrid,
+  BarChart, Bar, XAxis, YAxis, ResponsiveContainer, ReferenceLine, LabelList, CartesianGrid, Cell,
 } from "recharts";
 import {
-  parseExcel, prepare, rankByInterval, summaryByHour, summaryByDay, combineDateAndTime,
-  type Prepared,
+  parseExcel, prepare, rankByInterval, combineDateAndTime,
+  type Prepared, type RankItem,
 } from "@/lib/produtividade";
 
 export const Route = createFileRoute("/")({
@@ -81,8 +81,7 @@ function Index() {
     return {
       i1: rankByInterval(prepared.rows, i1Start, i1End),
       i2: rankByInterval(prepared.rows, i2Start, i2End),
-      sumHour: summaryByHour(prepared.rows, i2Start, i2End),
-      sumDay: summaryByDay(prepared.rows, i2Start, i2End),
+      i1Start, i1End, i2Start, i2End,
     };
   }, [prepared, calculated, date, h1Start, h1End, d2Start, d2End]);
 
@@ -211,53 +210,28 @@ function Index() {
 
         {result && !("err" in result) && (
           <>
-            <KpiRow
-              totalSeparado={result.i2.totalGeral}
-              separadoresAtivos={result.i2.separadoresAtivos}
-              media={result.i2.media}
+            <ChartReport
+              kind="hora"
+              headerTitle="Produtividade por Hora - Separação"
+              chartTitle={`Desempenho por separador (prod/h) - Intervalo 1 (Hora)`}
+              intervaloLabel={`${fmtDay(result.i1Start)} ${h1Start} às ${h1End}`}
+              ranking={result.i1.ranking}
+              media={result.i1.media}
+              total={result.i1.totalGeral}
+              separadoresAtivos={result.i1.separadoresAtivos}
               meta={meta}
             />
-
-            <div className="grid gap-6 lg:grid-cols-2">
-              <ChartCard
-                title="Desempenho por separador (prod/h)"
-                subtitle={`Intervalo 1 (Hora) — ${h1Start} às ${h1End}`}
-                data={result.i1.ranking}
-                media={result.i1.media}
-                meta={meta}
-              />
-              <ChartCard
-                title="Desempenho por separador (prod/h)"
-                subtitle={`Intervalo 2 (Dia) — ${d2Start} às ${d2End}`}
-                data={result.i2.ranking}
-                media={result.i2.media}
-                meta={meta}
-              />
-            </div>
-
-            <div className="grid gap-6 lg:grid-cols-2">
-              <SummaryTable
-                title="Resumo por hora"
-                head={["Hora", "Total", "Separadores", "Média/sep"]}
-                rows={result.sumHour.map((r) => [
-                  fmtHour(r.hora),
-                  fmtInt(r.total),
-                  String(r.separadoresAtivos),
-                  fmt1(r.media),
-                ])}
-              />
-              <SummaryTable
-                title="Resumo por dia"
-                head={["Dia", "Total", "Horas", "Separadores", "Prod/h"]}
-                rows={result.sumDay.map((r) => [
-                  fmtDay(r.dia),
-                  fmtInt(r.total),
-                  String(r.horas),
-                  String(r.separadoresAtivos),
-                  fmt1(r.prodHora),
-                ])}
-              />
-            </div>
+            <ChartReport
+              kind="dia"
+              headerTitle="Produtividade por Dia - Separação"
+              chartTitle={`Desempenho por separador (prod/h) - Intervalo 2 (Dia)`}
+              intervaloLabel={`${fmtDay(result.i2Start)}`}
+              ranking={result.i2.ranking}
+              media={result.i2.media}
+              total={result.i2.totalGeral}
+              separadoresAtivos={result.i2.separadoresAtivos}
+              meta={meta}
+            />
           </>
         )}
 
