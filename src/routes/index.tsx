@@ -136,19 +136,6 @@ function Index() {
             </div>
 
             <div className="md:col-span-3">
-              <label className="mb-1 block text-xs font-medium text-muted-foreground">Aba</label>
-              <select
-                value={selectedSheet}
-                onChange={(e) => onSheetChange(e.target.value)}
-                disabled={!sheets.length}
-                className="h-10 w-full rounded-md border bg-background px-3 text-sm disabled:opacity-50"
-              >
-                {sheets.length === 0 && <option>—</option>}
-                {sheets.map((s) => <option key={s} value={s}>{s}</option>)}
-              </select>
-            </div>
-
-            <div className="md:col-span-3">
               <label className="mb-1 block text-xs font-medium text-muted-foreground">Data</label>
               <input
                 type="date"
