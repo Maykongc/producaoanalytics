@@ -102,13 +102,18 @@ function Index() {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <header className="border-b bg-card">
-        <div className="mx-auto max-w-7xl px-6 py-6">
-          <h1 className="text-2xl font-semibold tracking-tight">Produtividade por Hora — Separação</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Faça upload da planilha, defina os filtros e analise o desempenho dos separadores.
-          </p>
+    <div className="min-h-screen text-foreground">
+      <header>
+        <div className="mx-auto flex max-w-7xl items-center gap-3 px-6 pt-10 pb-6">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/></svg>
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">Produtividade por Hora — Separação</h1>
+            <p className="mt-0.5 text-sm text-muted-foreground">
+              Faça upload da planilha, defina os filtros e analise o desempenho dos separadores.
+            </p>
+          </div>
         </div>
       </header>
 
