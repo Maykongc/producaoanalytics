@@ -28,11 +28,17 @@ function Index() {
   const [selectedSheet, setSelectedSheet] = useState<string>("");
   const [prepared, setPrepared] = useState<Prepared | null>(null);
 
-  const [date, setDate] = useState<string>(() => new Date().toISOString().slice(0, 10));
-  const [h1Start, setH1Start] = useState("14:00");
-  const [h1End, setH1End] = useState("15:00");
-  const [d2Start, setD2Start] = useState("06:00");
-  const [d2End, setD2End] = useState("17:00");
+  const [date, setDate] = useState<string>(() => {
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${dd}`;
+  });
+  const [h1Start, setH1Start] = useState("");
+  const [h1End, setH1End] = useState("");
+  const [d2Start, setD2Start] = useState("");
+  const [d2End, setD2End] = useState("");
   const [meta, setMeta] = useState<number>(35);
 
   const [error, setError] = useState<string>("");
@@ -72,6 +78,7 @@ function Index() {
 
   const result = useMemo(() => {
     if (!prepared || !calculated) return null;
+    if (!h1Start || !h1End || !d2Start || !d2End) return { err: "Preencha os horários dos intervalos." };
     if (h1Start >= h1End) return { err: "Intervalo 1: hora inicial deve ser menor que a final" };
     if (d2Start >= d2End) return { err: "Intervalo 2: hora inicial deve ser menor que a final" };
     const i1Start = combineDateAndTime(date, h1Start);
@@ -90,6 +97,8 @@ function Index() {
     if (!prepared) { setError("Faça o upload de um arquivo Excel primeiro."); return; }
     if (prepared.missing.length) { setError(`Colunas obrigatórias ausentes: ${prepared.missing.join(", ")}`); return; }
     if (!date) { setError("Selecione uma data."); return; }
+    if (!h1Start || !h1End) { setError("Intervalo 1: preencha as horas inicial e final."); return; }
+    if (!d2Start || !d2End) { setError("Intervalo 2: preencha as horas inicial e final."); return; }
     if (h1Start >= h1End) { setError("Intervalo 1: hora inicial deve ser menor que a final."); return; }
     if (d2Start >= d2End) { setError("Intervalo 2: hora inicial deve ser menor que a final."); return; }
     setCalculated(true);
