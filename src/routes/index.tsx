@@ -361,16 +361,24 @@ function ChartReport({
                     <Cell key={i} fill={d.prodHora >= meta ? "#3aa84a" : "#d94a4a"} />
                   ))}
                   <LabelList
-                    dataKey="enderecos"
-                    position="insideLeft"
-                    formatter={(v: number) => `${v} end.`}
-                    style={{ fontSize: 10, fill: "#ffffff", fontWeight: 600 }}
-                  />
-                  <LabelList
                     dataKey="total"
                     position="right"
-                    formatter={(v: number) => `${fmtInt(v)} prod`}
-                    style={{ fontSize: 10, fill: "#111827" }}
+                    content={(props: any) => {
+                      const { x, y, width, height, index } = props;
+                      const d = data[index];
+                      if (!d) return null;
+                      return (
+                        <text
+                          x={Number(x) + Number(width) + 6}
+                          y={Number(y) + Number(height) / 2}
+                          fill="#111827"
+                          fontSize={10}
+                          dominantBaseline="middle"
+                        >
+                          {`${fmtInt(d.total)} prod • ${d.enderecos} end.`}
+                        </text>
+                      );
+                    }}
                   />
                 </Bar>
               </BarChart>
