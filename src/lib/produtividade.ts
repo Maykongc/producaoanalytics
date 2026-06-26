@@ -39,9 +39,19 @@ export function normalizeRows(rows: Row[]): Row[] {
 
 // Excel serial date -> JS Date
 function excelSerialToDate(n: number): Date {
-  // Excel epoch: 1899-12-30
-  const ms = Math.round(n * 86400 * 1000);
-  return new Date(Date.UTC(1899, 11, 30) + ms);
+  // Excel epoch: 1899-12-30. Treat serial as a "naive" wall-clock value
+  // (matches how pandas/openpyxl read it) so 18:00 stays 18:00 in local time
+  // regardless of the user's timezone.
+  const whole = Math.floor(n);
+  const frac = n - whole;
+  const base = new Date(1899, 11, 30);
+  base.setDate(base.getDate() + whole);
+  const totalSec = Math.round(frac * 86400);
+  const hh = Math.floor(totalSec / 3600);
+  const mm = Math.floor((totalSec % 3600) / 60);
+  const ss = totalSec % 60;
+  base.setHours(hh, mm, ss, 0);
+  return base;
 }
 
 const MONTHS_PT: Record<string, number> = {
