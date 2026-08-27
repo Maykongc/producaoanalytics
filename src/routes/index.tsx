@@ -40,6 +40,7 @@ function Index() {
   const [d2Start, setD2Start] = useState("");
   const [d2End, setD2End] = useState("");
   const [meta, setMeta] = useState<number>(35);
+  const [zona, setZona] = useState<string>("ALL");
 
   const [error, setError] = useState<string>("");
   const [loading, setLoading] = useState(false);
@@ -76,6 +77,16 @@ function Index() {
     setCalculated(false);
   }
 
+  const zonas = useMemo(() => {
+    if (!prepared) return [] as string[];
+    const s = new Set<string>();
+    for (const r of prepared.rows) {
+      const e = (r.endereco ?? "").toString().trim();
+      if (e.length >= 3) s.add(e.slice(0, 3).toUpperCase());
+    }
+    return Array.from(s).sort();
+  }, [prepared]);
+
   const result = useMemo(() => {
     if (!prepared || !calculated) return null;
     if (!h1Start || !h1End || !d2Start || !d2End) return { err: "Preencha os horários dos intervalos." };
@@ -85,12 +96,15 @@ function Index() {
     const i1End = combineDateAndTime(date, h1End);
     const i2Start = combineDateAndTime(date, d2Start);
     const i2End = combineDateAndTime(date, d2End);
+    const rows = zona === "ALL"
+      ? prepared.rows
+      : prepared.rows.filter((r) => (r.endereco ?? "").toString().trim().slice(0, 3).toUpperCase() === zona);
     return {
-      i1: rankByInterval(prepared.rows, i1Start, i1End),
-      i2: rankByInterval(prepared.rows, i2Start, i2End),
+      i1: rankByInterval(rows, i1Start, i1End),
+      i2: rankByInterval(rows, i2Start, i2End),
       i1Start, i1End, i2Start, i2End,
     };
-  }, [prepared, calculated, date, h1Start, h1End, d2Start, d2End]);
+  }, [prepared, calculated, date, h1Start, h1End, d2Start, d2End, zona]);
 
   function calcular() {
     setError("");
@@ -162,6 +176,20 @@ function Index() {
                 onChange={(e) => setMeta(parseFloat(e.target.value) || 0)}
                 className="h-10 w-full rounded-md border bg-background px-3 text-sm"
               />
+            </div>
+
+            <div className="md:col-span-3">
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">Zona (endereço)</label>
+              <select
+                value={zona}
+                onChange={(e) => setZona(e.target.value)}
+                className="h-10 w-full rounded-md border bg-background px-3 text-sm"
+              >
+                <option value="ALL">Todas as zonas</option>
+                {zonas.map((z) => (
+                  <option key={z} value={z}>{z}</option>
+                ))}
+              </select>
             </div>
 
             <div className="md:col-span-6">
