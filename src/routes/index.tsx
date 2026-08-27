@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toPng } from "html-to-image";
 import {
   BarChart, Bar, XAxis, YAxis, ResponsiveContainer, ReferenceLine, LabelList, CartesianGrid, Cell,
@@ -40,9 +40,9 @@ function Index() {
   const [d2Start, setD2Start] = useState("");
   const [d2End, setD2End] = useState("");
   const [meta, setMeta] = useState<number>(35);
-  const [zona, setZona] = useState<string>("ALL");
-  const [turno, setTurno] = useState<string>("ALL");
-  const [funcionario, setFuncionario] = useState<string>("ALL");
+  const [zonaSel, setZonaSel] = useState<string[]>([]);
+  const [turnoSel, setTurnoSel] = useState<string[]>([]);
+  const [funcionario, setFuncionario] = useState<string>("");
 
 
   const [error, setError] = useState<string>("");
@@ -110,17 +110,18 @@ function Index() {
     const i1End = combineDateAndTime(date, h1End);
     const i2Start = combineDateAndTime(date, d2Start);
     const i2End = combineDateAndTime(date, d2End);
+    const q = funcionario.trim().toLowerCase();
     const rows = prepared.rows.filter((r) =>
-      (zona === "ALL" || r.zona === zona) &&
-      (turno === "ALL" || r.turno === turno) &&
-      (funcionario === "ALL" || r.separador === funcionario),
+      (zonaSel.length === 0 || zonaSel.includes(r.zona ?? "")) &&
+      (turnoSel.length === 0 || turnoSel.includes(r.turno ?? "")) &&
+      (q === "" || (r.separador ?? "").toLowerCase().includes(q)),
     );
     return {
       i1: rankByInterval(rows, i1Start, i1End),
       i2: rankByInterval(rows, i2Start, i2End),
       i1Start, i1End, i2Start, i2End,
     };
-  }, [prepared, calculated, date, h1Start, h1End, d2Start, d2End, zona, turno, funcionario]);
+  }, [prepared, calculated, date, h1Start, h1End, d2Start, d2End, zonaSel, turnoSel, funcionario]);
 
 
   function calcular() {
@@ -197,45 +198,41 @@ function Index() {
 
             <div className="md:col-span-3">
               <label className="mb-1 block text-xs font-medium text-muted-foreground">Zona</label>
-              <select
-                value={zona}
-                onChange={(e) => setZona(e.target.value)}
-                className="h-10 w-full rounded-md border bg-background px-3 text-sm"
-              >
-                <option value="ALL">Todas as zonas</option>
-                {zonas.map((z) => (
-                  <option key={z} value={z}>{z}</option>
-                ))}
-              </select>
+              <MultiSelect
+                options={zonas}
+                selected={zonaSel}
+                onChange={setZonaSel}
+                allLabel="Todas as zonas"
+              />
             </div>
 
             <div className="md:col-span-3">
               <label className="mb-1 block text-xs font-medium text-muted-foreground">Turno</label>
-              <select
-                value={turno}
-                onChange={(e) => setTurno(e.target.value)}
-                className="h-10 w-full rounded-md border bg-background px-3 text-sm"
-              >
-                <option value="ALL">Todos os turnos</option>
-                {turnos.map((t) => (
-                  <option key={t} value={t}>{t}</option>
-                ))}
-              </select>
+              <MultiSelect
+                options={turnos}
+                selected={turnoSel}
+                onChange={setTurnoSel}
+                allLabel="Todos os turnos"
+              />
             </div>
 
             <div className="md:col-span-5">
               <label className="mb-1 block text-xs font-medium text-muted-foreground">Funcionário</label>
-              <select
+              <input
+                type="text"
+                list="lista-funcionarios"
                 value={funcionario}
                 onChange={(e) => setFuncionario(e.target.value)}
+                placeholder="Buscar por nome ou código (todos)"
                 className="h-10 w-full rounded-md border bg-background px-3 text-sm"
-              >
-                <option value="ALL">Todos os funcionários</option>
+              />
+              <datalist id="lista-funcionarios">
                 {funcionarios.map((f) => (
-                  <option key={f} value={f}>{f}</option>
+                  <option key={f} value={f} />
                 ))}
-              </select>
+              </datalist>
             </div>
+
 
 
             <div className="md:col-span-6">
@@ -292,7 +289,7 @@ function Index() {
         )}
 
         {result && !("err" in result) && (() => {
-          const zonaLabel = zona === "ALL" ? "Todas" : zona;
+          const zonaLabel = zonaSel.length === 0 ? "Todas" : zonaSel.join(", ");
           return (
           <>
             <ChartReport
@@ -495,3 +492,64 @@ function fmtInt(n: number) { return new Intl.NumberFormat("pt-BR").format(Math.r
 function fmt1(n: number) { return new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(n); }
 function pad(n: number) { return n.toString().padStart(2, "0"); }
 function fmtDay(d: Date) { return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}`; }
+
+function MultiSelect({
+  options, selected, onChange, allLabel,
+}: {
+  options: string[];
+  selected: string[];
+  onChange: (v: string[]) => void;
+  allLabel: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const box = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function onDoc(e: MouseEvent) {
+      if (box.current && !box.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", onDoc);
+    return () => document.removeEventListener("mousedown", onDoc);
+  }, []);
+
+  function toggle(v: string) {
+    onChange(selected.includes(v) ? selected.filter((x) => x !== v) : [...selected, v]);
+  }
+
+  const label = selected.length === 0 ? allLabel : selected.join(", ");
+
+  return (
+    <div ref={box} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="flex h-10 w-full items-center justify-between gap-2 rounded-md border bg-background px-3 text-left text-sm hover:bg-accent"
+      >
+        <span className="truncate">{label}</span>
+        <span className="text-muted-foreground">▾</span>
+      </button>
+      {open && (
+        <div className="absolute z-20 mt-1 max-h-60 w-full overflow-auto rounded-md border bg-popover p-1 shadow-md">
+          <button
+            type="button"
+            onClick={() => onChange([])}
+            className="w-full rounded px-2 py-1.5 text-left text-xs text-muted-foreground hover:bg-accent"
+          >
+            {allLabel}
+          </button>
+          {options.map((o) => (
+            <label key={o} className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm hover:bg-accent">
+              <input
+                type="checkbox"
+                checked={selected.includes(o)}
+                onChange={() => toggle(o)}
+                className="h-4 w-4"
+              />
+              <span className="truncate">{o}</span>
+            </label>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
