@@ -122,7 +122,7 @@ export interface Prepared {
 const ENDERECO_CANDIDATES = ["endereco", "endereco_picking", "end_picking", "rua", "posicao", "local", "endereco_separacao", "cd_endereco"];
 
 const QT_CANDIDATES = ["qt_separada", "quantidade_separada", "qtd_separada", "qt_separado"];
-const DT_CANDIDATES = ["dt_separacao", "data_separacao", "data_hora_separacao"];
+const DT_CANDIDATES = ["dt_separacao", "data_hora_separacao", "data_separacao"];
 const NOME_CANDIDATES = ["separador", "nome_separador", "rotulo_separador", "nm_funcionario"];
 const COD_CANDIDATES = ["codigo_separador", "cod_separador", "cd_separador", "matricula", "cd_funcionario"];
 const ZONA_CANDIDATES = ["cd_classe", "classe", "zona"];
