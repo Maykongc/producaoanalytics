@@ -101,9 +101,6 @@ function Index() {
     return Array.from(s).sort();
   }, [prepared]);
 
-  useEffect(() => {
-    setFuncionarioSel(funcionarios);
-  }, [funcionarios]);
 
   const result = useMemo(() => {
     if (!prepared || !calculated) return null;
@@ -528,13 +525,23 @@ function MultiSelect({
       </button>
       {open && (
         <div className="absolute z-20 mt-1 max-h-60 w-full overflow-auto rounded-md border bg-popover p-1 shadow-md">
-          <button
-            type="button"
-            onClick={() => onChange([])}
-            className="w-full rounded px-2 py-1.5 text-left text-xs text-muted-foreground hover:bg-accent"
-          >
-            {allLabel}
-          </button>
+          <div className="sticky top-0 z-10 flex gap-1 border-b bg-popover pb-1 mb-1">
+            <button
+              type="button"
+              onClick={() => onChange(options)}
+              className="flex-1 rounded px-2 py-1.5 text-left text-xs font-medium text-foreground hover:bg-accent"
+            >
+              {allLabel}
+            </button>
+            <button
+              type="button"
+              onClick={() => onChange([])}
+              className="rounded px-2 py-1.5 text-left text-xs text-muted-foreground hover:bg-accent"
+            >
+              Limpar seleção
+            </button>
+          </div>
+
           {options.map((o) => (
             <label key={o} className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm hover:bg-accent">
               <input
