@@ -40,9 +40,9 @@ function Index() {
   const [d2Start, setD2Start] = useState("");
   const [d2End, setD2End] = useState("");
   const [meta, setMeta] = useState<number>(35);
-  const [zona, setZona] = useState<string>("ALL");
-  const [turno, setTurno] = useState<string>("ALL");
-  const [funcionario, setFuncionario] = useState<string>("ALL");
+  const [zonaSel, setZonaSel] = useState<string[]>([]);
+  const [turnoSel, setTurnoSel] = useState<string[]>([]);
+  const [funcionario, setFuncionario] = useState<string>("");
 
 
   const [error, setError] = useState<string>("");
