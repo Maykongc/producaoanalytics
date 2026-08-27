@@ -245,11 +245,13 @@ function Index() {
           </div>
         )}
 
-        {result && !("err" in result) && (
+        {result && !("err" in result) && (() => {
+          const zonaLabel = zona === "ALL" ? "Todas" : zona;
+          return (
           <>
             <ChartReport
               kind="hora"
-              headerTitle="Produtividade por Hora - Separação"
+              headerTitle={`Produtividade por Hora - Separação - Zona (${zonaLabel})`}
               chartTitle={`Desempenho por separador (prod/h) - Intervalo 1 (Hora)`}
               intervaloLabel={`${fmtDay(result.i1Start)} ${h1Start} às ${h1End}`}
               ranking={result.i1.ranking}
@@ -260,7 +262,7 @@ function Index() {
             />
             <ChartReport
               kind="dia"
-              headerTitle="Produtividade por Dia - Separação"
+              headerTitle={`Produtividade por Dia - Separação - Zona (${zonaLabel})`}
               chartTitle={`Desempenho por separador (prod/h) - Intervalo 2 (Dia)`}
               intervaloLabel={`${fmtDay(result.i2Start)}`}
               ranking={result.i2.ranking}
@@ -270,7 +272,8 @@ function Index() {
               meta={meta}
             />
           </>
-        )}
+          );
+        })()}
 
         {!result && (
           <div className="rounded-xl border border-dashed bg-card p-10 text-center text-sm text-muted-foreground">
