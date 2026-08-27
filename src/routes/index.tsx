@@ -112,8 +112,8 @@ function Index() {
     const i2End = combineDateAndTime(date, d2End);
     const q = funcionario.trim().toLowerCase();
     const rows = prepared.rows.filter((r) =>
-      (zonaSel.length === 0 || zonaSel.includes(r.zona)) &&
-      (turnoSel.length === 0 || turnoSel.includes(r.turno)) &&
+      (zonaSel.length === 0 || zonaSel.includes(r.zona ?? "")) &&
+      (turnoSel.length === 0 || turnoSel.includes(r.turno ?? "")) &&
       (q === "" || (r.separador ?? "").toLowerCase().includes(q)),
     );
     return {
