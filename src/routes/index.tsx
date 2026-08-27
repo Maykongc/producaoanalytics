@@ -41,6 +41,9 @@ function Index() {
   const [d2End, setD2End] = useState("");
   const [meta, setMeta] = useState<number>(35);
   const [zona, setZona] = useState<string>("ALL");
+  const [turno, setTurno] = useState<string>("ALL");
+  const [funcionario, setFuncionario] = useState<string>("ALL");
+
 
   const [error, setError] = useState<string>("");
   const [loading, setLoading] = useState(false);
@@ -80,10 +83,21 @@ function Index() {
   const zonas = useMemo(() => {
     if (!prepared) return [] as string[];
     const s = new Set<string>();
-    for (const r of prepared.rows) {
-      const e = (r.endereco ?? "").toString().trim();
-      if (e.length >= 3) s.add(e.slice(0, 3).toUpperCase());
-    }
+    for (const r of prepared.rows) if (r.zona) s.add(r.zona);
+    return Array.from(s).sort();
+  }, [prepared]);
+
+  const turnos = useMemo(() => {
+    if (!prepared) return [] as string[];
+    const s = new Set<string>();
+    for (const r of prepared.rows) if (r.turno) s.add(r.turno);
+    return Array.from(s).sort();
+  }, [prepared]);
+
+  const funcionarios = useMemo(() => {
+    if (!prepared) return [] as string[];
+    const s = new Set<string>();
+    for (const r of prepared.rows) if (r.separador) s.add(r.separador);
     return Array.from(s).sort();
   }, [prepared]);
 
@@ -96,15 +110,18 @@ function Index() {
     const i1End = combineDateAndTime(date, h1End);
     const i2Start = combineDateAndTime(date, d2Start);
     const i2End = combineDateAndTime(date, d2End);
-    const rows = zona === "ALL"
-      ? prepared.rows
-      : prepared.rows.filter((r) => (r.endereco ?? "").toString().trim().slice(0, 3).toUpperCase() === zona);
+    const rows = prepared.rows.filter((r) =>
+      (zona === "ALL" || r.zona === zona) &&
+      (turno === "ALL" || r.turno === turno) &&
+      (funcionario === "ALL" || r.separador === funcionario),
+    );
     return {
       i1: rankByInterval(rows, i1Start, i1End),
       i2: rankByInterval(rows, i2Start, i2End),
       i1Start, i1End, i2Start, i2End,
     };
-  }, [prepared, calculated, date, h1Start, h1End, d2Start, d2End, zona]);
+  }, [prepared, calculated, date, h1Start, h1End, d2Start, d2End, zona, turno, funcionario]);
+
 
   function calcular() {
     setError("");
@@ -179,7 +196,7 @@ function Index() {
             </div>
 
             <div className="md:col-span-3">
-              <label className="mb-1 block text-xs font-medium text-muted-foreground">Zona (endereço)</label>
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">Zona</label>
               <select
                 value={zona}
                 onChange={(e) => setZona(e.target.value)}
@@ -191,6 +208,35 @@ function Index() {
                 ))}
               </select>
             </div>
+
+            <div className="md:col-span-3">
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">Turno</label>
+              <select
+                value={turno}
+                onChange={(e) => setTurno(e.target.value)}
+                className="h-10 w-full rounded-md border bg-background px-3 text-sm"
+              >
+                <option value="ALL">Todos os turnos</option>
+                {turnos.map((t) => (
+                  <option key={t} value={t}>{t}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="md:col-span-5">
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">Funcionário</label>
+              <select
+                value={funcionario}
+                onChange={(e) => setFuncionario(e.target.value)}
+                className="h-10 w-full rounded-md border bg-background px-3 text-sm"
+              >
+                <option value="ALL">Todos os funcionários</option>
+                {funcionarios.map((f) => (
+                  <option key={f} value={f}>{f}</option>
+                ))}
+              </select>
+            </div>
+
 
             <div className="md:col-span-6">
               <label className="mb-1 block text-xs font-medium text-muted-foreground">Intervalo 1 (hora)</label>
