@@ -121,7 +121,7 @@ function Index() {
       i2: rankByInterval(rows, i2Start, i2End),
       i1Start, i1End, i2Start, i2End,
     };
-  }, [prepared, calculated, date, h1Start, h1End, d2Start, d2End, zona, turno, funcionario]);
+  }, [prepared, calculated, date, h1Start, h1End, d2Start, d2End, zonaSel, turnoSel, funcionario]);
 
 
   function calcular() {
