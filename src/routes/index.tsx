@@ -41,6 +41,9 @@ function Index() {
   const [d2End, setD2End] = useState("");
   const [meta, setMeta] = useState<number>(35);
   const [zona, setZona] = useState<string>("ALL");
+  const [turno, setTurno] = useState<string>("ALL");
+  const [funcionario, setFuncionario] = useState<string>("ALL");
+
 
   const [error, setError] = useState<string>("");
   const [loading, setLoading] = useState(false);
