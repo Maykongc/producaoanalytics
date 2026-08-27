@@ -178,6 +178,20 @@ function Index() {
               />
             </div>
 
+            <div className="md:col-span-3">
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">Zona (endereço)</label>
+              <select
+                value={zona}
+                onChange={(e) => setZona(e.target.value)}
+                className="h-10 w-full rounded-md border bg-background px-3 text-sm"
+              >
+                <option value="ALL">Todas as zonas</option>
+                {zonas.map((z) => (
+                  <option key={z} value={z}>{z}</option>
+                ))}
+              </select>
+            </div>
+
             <div className="md:col-span-6">
               <label className="mb-1 block text-xs font-medium text-muted-foreground">Intervalo 1 (hora)</label>
               <div className="flex items-center gap-2">
