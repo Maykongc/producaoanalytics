@@ -42,7 +42,7 @@ function Index() {
   const [meta, setMeta] = useState<number>(35);
   const [zonaSel, setZonaSel] = useState<string[]>([]);
   const [turnoSel, setTurnoSel] = useState<string[]>([]);
-  const [funcionario, setFuncionario] = useState<string>("");
+  const [funcionarioSel, setFuncionarioSel] = useState<string[]>([]);
 
 
   const [error, setError] = useState<string>("");
@@ -101,6 +101,10 @@ function Index() {
     return Array.from(s).sort();
   }, [prepared]);
 
+  useEffect(() => {
+    setFuncionarioSel(funcionarios);
+  }, [funcionarios]);
+
   const result = useMemo(() => {
     if (!prepared || !calculated) return null;
     if (!h1Start || !h1End || !d2Start || !d2End) return { err: "Preencha os horários dos intervalos." };
@@ -110,11 +114,10 @@ function Index() {
     const i1End = combineDateAndTime(date, h1End);
     const i2Start = combineDateAndTime(date, d2Start);
     const i2End = combineDateAndTime(date, d2End);
-    const q = funcionario.trim().toLowerCase();
     const rows = prepared.rows.filter((r) =>
       (zonaSel.length === 0 || zonaSel.includes(r.zona ?? "")) &&
       (turnoSel.length === 0 || turnoSel.includes(r.turno ?? "")) &&
-      (q === "" || (r.separador ?? "").toLowerCase().includes(q)),
+      (funcionarioSel.length === 0 || funcionarioSel.includes(r.separador ?? "")),
     );
     return {
       i1: rankByInterval(rows, i1Start, i1End),
@@ -203,6 +206,7 @@ function Index() {
                 selected={zonaSel}
                 onChange={setZonaSel}
                 allLabel="Todas as zonas"
+                placeholder=""
               />
             </div>
 
@@ -218,19 +222,12 @@ function Index() {
 
             <div className="md:col-span-5">
               <label className="mb-1 block text-xs font-medium text-muted-foreground">Funcionário</label>
-              <input
-                type="text"
-                list="lista-funcionarios"
-                value={funcionario}
-                onChange={(e) => setFuncionario(e.target.value)}
-                placeholder="Buscar por nome ou código (todos)"
-                className="h-10 w-full rounded-md border bg-background px-3 text-sm"
+              <MultiSelect
+                options={funcionarios}
+                selected={funcionarioSel}
+                onChange={setFuncionarioSel}
+                allLabel="Todos os funcionários"
               />
-              <datalist id="lista-funcionarios">
-                {funcionarios.map((f) => (
-                  <option key={f} value={f} />
-                ))}
-              </datalist>
             </div>
 
 
@@ -494,12 +491,13 @@ function pad(n: number) { return n.toString().padStart(2, "0"); }
 function fmtDay(d: Date) { return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}`; }
 
 function MultiSelect({
-  options, selected, onChange, allLabel,
+  options, selected, onChange, allLabel, placeholder,
 }: {
   options: string[];
   selected: string[];
   onChange: (v: string[]) => void;
   allLabel: string;
+  placeholder?: string;
 }) {
   const [open, setOpen] = useState(false);
   const box = useRef<HTMLDivElement>(null);
@@ -516,7 +514,7 @@ function MultiSelect({
     onChange(selected.includes(v) ? selected.filter((x) => x !== v) : [...selected, v]);
   }
 
-  const label = selected.length === 0 ? allLabel : selected.join(", ");
+  const label = selected.length === 0 ? (placeholder ?? allLabel) : selected.join(", ");
 
   return (
     <div ref={box} className="relative">
