@@ -251,7 +251,7 @@ function Index() {
           <>
             <ChartReport
               kind="hora"
-              headerTitle={`Produtividade por Hora - Separação (Zona (${zonaLabel}))`}
+              headerTitle={`Produtividade por Hora - Separação - Zona (${zonaLabel})`}
               chartTitle={`Desempenho por separador (prod/h) - Intervalo 1 (Hora)`}
               intervaloLabel={`${fmtDay(result.i1Start)} ${h1Start} às ${h1End}`}
               ranking={result.i1.ranking}
@@ -262,7 +262,7 @@ function Index() {
             />
             <ChartReport
               kind="dia"
-              headerTitle={`Produtividade por Dia - Separação (Zona (${zonaLabel}))`}
+              headerTitle={`Produtividade por Dia - Separação - Zona (${zonaLabel})`}
               chartTitle={`Desempenho por separador (prod/h) - Intervalo 2 (Dia)`}
               intervaloLabel={`${fmtDay(result.i2Start)}`}
               ranking={result.i2.ranking}
