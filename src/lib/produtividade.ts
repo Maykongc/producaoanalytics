@@ -110,6 +110,8 @@ export interface Prepared {
     dt: Date;
     separador: string;
     endereco: string | null;
+    zona: string | null;
+    turno: string | null;
     horaInicio: Date;
     diaInicio: Date;
   }>;
@@ -117,12 +119,28 @@ export interface Prepared {
   missing: string[];
 }
 
-const ENDERECO_CANDIDATES = ["endereco", "endereco_picking", "end_picking", "rua", "posicao", "local", "endereco_separacao"];
+const ENDERECO_CANDIDATES = ["endereco", "endereco_picking", "end_picking", "rua", "posicao", "local", "endereco_separacao", "cd_endereco"];
 
-const QT_CANDIDATES = ["qt_separada", "quantidade_separada", "qtd_separada"];
+const QT_CANDIDATES = ["qt_separada", "quantidade_separada", "qtd_separada", "qt_separado"];
 const DT_CANDIDATES = ["dt_separacao", "data_separacao", "data_hora_separacao"];
-const NOME_CANDIDATES = ["separador", "nome_separador", "rotulo_separador"];
-const COD_CANDIDATES = ["codigo_separador", "cod_separador", "cd_separador", "matricula"];
+const NOME_CANDIDATES = ["separador", "nome_separador", "rotulo_separador", "nm_funcionario"];
+const COD_CANDIDATES = ["codigo_separador", "cod_separador", "cd_separador", "matricula", "cd_funcionario"];
+const ZONA_CANDIDATES = ["cd_classe", "classe", "zona"];
+const TURNO_CANDIDATES = ["turno_rota", "turno", "cd_turno"];
+
+// Some exports append the SQL type to the header (e.g. "QT_SEPARADO NUMBER").
+const TYPE_SUFFIX = /_(varchar2|varchar|number|char|date|float|integer|int|numeric|timestamp)$/;
+
+function withAliases(rows: Row[]): Row[] {
+  return rows.map((r) => {
+    const out: Row = { ...r };
+    for (const k of Object.keys(r)) {
+      const alias = k.replace(TYPE_SUFFIX, "");
+      if (alias !== k && !(alias in out)) out[alias] = r[k];
+    }
+    return out;
+  });
+}
 
 function pick(obj: Row, cands: string[]): string | null {
   for (const c of cands) if (c in obj) return c;
@@ -130,13 +148,15 @@ function pick(obj: Row, cands: string[]): string | null {
 }
 
 export function prepare(rawRows: Row[]): Prepared {
-  const rows = normalizeRows(rawRows);
+  const rows = withAliases(normalizeRows(rawRows));
   const missing: string[] = [];
   const first = rows[0] ?? {};
   const qtKey = pick(first, QT_CANDIDATES);
   const dtKey = pick(first, DT_CANDIDATES);
   const nomeKey = pick(first, NOME_CANDIDATES);
   const codKey = pick(first, COD_CANDIDATES);
+  const zonaKey = pick(first, ZONA_CANDIDATES);
+  const turnoKey = pick(first, TURNO_CANDIDATES);
   if (!qtKey) missing.push("Qt. Separada");
   if (!dtKey) missing.push("Dt. Separação");
   if (!nomeKey && !codKey) missing.push("Separador");
@@ -157,11 +177,17 @@ export function prepare(rawRows: Row[]): Prepared {
     const sep = (cod && nome) ? `${cod} - ${nome}` : (cod || nome || "—");
     const horaInicio = new Date(dt.getFullYear(), dt.getMonth(), dt.getDate(), dt.getHours());
     const diaInicio = new Date(dt.getFullYear(), dt.getMonth(), dt.getDate());
+    const endereco = enderecoField ? (r[enderecoField] == null ? null : String(r[enderecoField])) : null;
+    const zonaRaw = zonaKey ? (r[zonaKey] == null ? "" : String(r[zonaKey]).trim()) : "";
+    const zona = zonaRaw || (endereco && endereco.trim().length >= 3 ? endereco.trim().slice(0, 3).toUpperCase() : null);
+    const turnoRaw = turnoKey ? (r[turnoKey] == null ? "" : String(r[turnoKey]).trim()) : "";
     prepared.push({
       qt,
       dt,
       separador: sep,
-      endereco: enderecoField ? (r[enderecoField] == null ? null : String(r[enderecoField])) : null,
+      endereco,
+      zona: zona || null,
+      turno: turnoRaw || null,
       horaInicio,
       diaInicio,
     });
@@ -169,6 +195,7 @@ export function prepare(rawRows: Row[]): Prepared {
 
   return { rows: prepared, enderecoField, missing };
 }
+
 
 export interface RankItem {
   separador: string;
