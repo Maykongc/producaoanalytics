@@ -101,9 +101,6 @@ function Index() {
     return Array.from(s).sort();
   }, [prepared]);
 
-  useEffect(() => {
-    setFuncionarioSel(funcionarios);
-  }, [funcionarios]);
 
   const result = useMemo(() => {
     if (!prepared || !calculated) return null;
