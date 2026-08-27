@@ -196,7 +196,7 @@ function Index() {
             </div>
 
             <div className="md:col-span-3">
-              <label className="mb-1 block text-xs font-medium text-muted-foreground">Zona (endereço)</label>
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">Zona</label>
               <select
                 value={zona}
                 onChange={(e) => setZona(e.target.value)}
@@ -208,6 +208,35 @@ function Index() {
                 ))}
               </select>
             </div>
+
+            <div className="md:col-span-3">
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">Turno</label>
+              <select
+                value={turno}
+                onChange={(e) => setTurno(e.target.value)}
+                className="h-10 w-full rounded-md border bg-background px-3 text-sm"
+              >
+                <option value="ALL">Todos os turnos</option>
+                {turnos.map((t) => (
+                  <option key={t} value={t}>{t}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="md:col-span-5">
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">Funcionário</label>
+              <select
+                value={funcionario}
+                onChange={(e) => setFuncionario(e.target.value)}
+                className="h-10 w-full rounded-md border bg-background px-3 text-sm"
+              >
+                <option value="ALL">Todos os funcionários</option>
+                {funcionarios.map((f) => (
+                  <option key={f} value={f}>{f}</option>
+                ))}
+              </select>
+            </div>
+
 
             <div className="md:col-span-6">
               <label className="mb-1 block text-xs font-medium text-muted-foreground">Intervalo 1 (hora)</label>
