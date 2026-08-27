@@ -289,7 +289,7 @@ function Index() {
         )}
 
         {result && !("err" in result) && (() => {
-          const zonaLabel = zona === "ALL" ? "Todas" : zona;
+          const zonaLabel = zonaSel.length === 0 ? "Todas" : zonaSel.join(", ");
           return (
           <>
             <ChartReport
