@@ -198,45 +198,41 @@ function Index() {
 
             <div className="md:col-span-3">
               <label className="mb-1 block text-xs font-medium text-muted-foreground">Zona</label>
-              <select
-                value={zona}
-                onChange={(e) => setZona(e.target.value)}
-                className="h-10 w-full rounded-md border bg-background px-3 text-sm"
-              >
-                <option value="ALL">Todas as zonas</option>
-                {zonas.map((z) => (
-                  <option key={z} value={z}>{z}</option>
-                ))}
-              </select>
+              <MultiSelect
+                options={zonas}
+                selected={zonaSel}
+                onChange={setZonaSel}
+                allLabel="Todas as zonas"
+              />
             </div>
 
             <div className="md:col-span-3">
               <label className="mb-1 block text-xs font-medium text-muted-foreground">Turno</label>
-              <select
-                value={turno}
-                onChange={(e) => setTurno(e.target.value)}
-                className="h-10 w-full rounded-md border bg-background px-3 text-sm"
-              >
-                <option value="ALL">Todos os turnos</option>
-                {turnos.map((t) => (
-                  <option key={t} value={t}>{t}</option>
-                ))}
-              </select>
+              <MultiSelect
+                options={turnos}
+                selected={turnoSel}
+                onChange={setTurnoSel}
+                allLabel="Todos os turnos"
+              />
             </div>
 
             <div className="md:col-span-5">
               <label className="mb-1 block text-xs font-medium text-muted-foreground">Funcionário</label>
-              <select
+              <input
+                type="text"
+                list="lista-funcionarios"
                 value={funcionario}
                 onChange={(e) => setFuncionario(e.target.value)}
+                placeholder="Buscar por nome ou código (todos)"
                 className="h-10 w-full rounded-md border bg-background px-3 text-sm"
-              >
-                <option value="ALL">Todos os funcionários</option>
+              />
+              <datalist id="lista-funcionarios">
                 {funcionarios.map((f) => (
-                  <option key={f} value={f}>{f}</option>
+                  <option key={f} value={f} />
                 ))}
-              </select>
+              </datalist>
             </div>
+
 
 
             <div className="md:col-span-6">
