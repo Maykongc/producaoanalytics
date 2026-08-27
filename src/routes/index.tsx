@@ -80,10 +80,21 @@ function Index() {
   const zonas = useMemo(() => {
     if (!prepared) return [] as string[];
     const s = new Set<string>();
-    for (const r of prepared.rows) {
-      const e = (r.endereco ?? "").toString().trim();
-      if (e.length >= 3) s.add(e.slice(0, 3).toUpperCase());
-    }
+    for (const r of prepared.rows) if (r.zona) s.add(r.zona);
+    return Array.from(s).sort();
+  }, [prepared]);
+
+  const turnos = useMemo(() => {
+    if (!prepared) return [] as string[];
+    const s = new Set<string>();
+    for (const r of prepared.rows) if (r.turno) s.add(r.turno);
+    return Array.from(s).sort();
+  }, [prepared]);
+
+  const funcionarios = useMemo(() => {
+    if (!prepared) return [] as string[];
+    const s = new Set<string>();
+    for (const r of prepared.rows) if (r.separador) s.add(r.separador);
     return Array.from(s).sort();
   }, [prepared]);
 
@@ -96,15 +107,18 @@ function Index() {
     const i1End = combineDateAndTime(date, h1End);
     const i2Start = combineDateAndTime(date, d2Start);
     const i2End = combineDateAndTime(date, d2End);
-    const rows = zona === "ALL"
-      ? prepared.rows
-      : prepared.rows.filter((r) => (r.endereco ?? "").toString().trim().slice(0, 3).toUpperCase() === zona);
+    const rows = prepared.rows.filter((r) =>
+      (zona === "ALL" || r.zona === zona) &&
+      (turno === "ALL" || r.turno === turno) &&
+      (funcionario === "ALL" || r.separador === funcionario),
+    );
     return {
       i1: rankByInterval(rows, i1Start, i1End),
       i2: rankByInterval(rows, i2Start, i2End),
       i1Start, i1End, i2Start, i2End,
     };
-  }, [prepared, calculated, date, h1Start, h1End, d2Start, d2End, zona]);
+  }, [prepared, calculated, date, h1Start, h1End, d2Start, d2End, zona, turno, funcionario]);
+
 
   function calcular() {
     setError("");
