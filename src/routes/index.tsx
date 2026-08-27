@@ -110,10 +110,11 @@ function Index() {
     const i1End = combineDateAndTime(date, h1End);
     const i2Start = combineDateAndTime(date, d2Start);
     const i2End = combineDateAndTime(date, d2End);
+    const q = funcionario.trim().toLowerCase();
     const rows = prepared.rows.filter((r) =>
-      (zona === "ALL" || r.zona === zona) &&
-      (turno === "ALL" || r.turno === turno) &&
-      (funcionario === "ALL" || r.separador === funcionario),
+      (zonaSel.length === 0 || zonaSel.includes(r.zona)) &&
+      (turnoSel.length === 0 || turnoSel.includes(r.turno)) &&
+      (q === "" || (r.separador ?? "").toLowerCase().includes(q)),
     );
     return {
       i1: rankByInterval(rows, i1Start, i1End),
