@@ -29,6 +29,7 @@ function Index() {
   const [selectedSheet, setSelectedSheet] = useState<string>("");
   const [prepared, setPrepared] = useState<Prepared | null>(null);
 
+  const [dateMode, setDateMode] = useState<"dia" | "mes" | "periodo">("dia");
   const [date, setDate] = useState<string>(() => {
     const d = new Date();
     const y = d.getFullYear();
@@ -36,11 +37,15 @@ function Index() {
     const dd = String(d.getDate()).padStart(2, "0");
     return `${y}-${m}-${dd}`;
   });
+  const [month, setMonth] = useState<string>("");
+  const [rangeStart, setRangeStart] = useState<string>("");
+  const [rangeEnd, setRangeEnd] = useState<string>("");
   const [h1Start, setH1Start] = useState("");
   const [h1End, setH1End] = useState("");
   const [d2Start, setD2Start] = useState("");
   const [d2End, setD2End] = useState("");
   const [meta, setMeta] = useState<number>(35);
+
   const [zonaSel, setZonaSel] = useState<string[]>([]);
   
   const [funcionarioSel, setFuncionarioSel] = useState<string[]>([]);
