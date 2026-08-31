@@ -41,7 +41,7 @@ function Index() {
   const [d2End, setD2End] = useState("");
   const [meta, setMeta] = useState<number>(35);
   const [zonaSel, setZonaSel] = useState<string[]>([]);
-  const [turnoSel, setTurnoSel] = useState<string[]>([]);
+  
   const [funcionarioSel, setFuncionarioSel] = useState<string[]>([]);
 
 
@@ -87,19 +87,17 @@ function Index() {
     return Array.from(s).sort();
   }, [prepared]);
 
-  const turnos = useMemo(() => {
-    if (!prepared) return [] as string[];
-    const s = new Set<string>();
-    for (const r of prepared.rows) if (r.turno) s.add(r.turno);
-    return Array.from(s).sort();
-  }, [prepared]);
-
   const funcionarios = useMemo(() => {
     if (!prepared) return [] as string[];
     const s = new Set<string>();
     for (const r of prepared.rows) if (r.separador) s.add(r.separador);
     return Array.from(s).sort();
   }, [prepared]);
+
+  useEffect(() => {
+    setFuncionarioSel(funcionarios);
+  }, [funcionarios]);
+
 
 
   const result = useMemo(() => {
