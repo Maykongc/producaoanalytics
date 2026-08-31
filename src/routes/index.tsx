@@ -353,6 +353,33 @@ function ChartReport({
   const height = Math.max(260, data.length * 28 + 120);
   const ref = useRef<HTMLDivElement>(null);
   const [copyState, setCopyState] = useState<"idle" | "copying" | "done" | "err">("idle");
+  const [pdfState, setPdfState] = useState<"idle" | "working" | "err">("idle");
+
+  async function downloadPdf() {
+    if (!ref.current) return;
+    setPdfState("working");
+    try {
+      const node = ref.current;
+      const dataUrl = await toPng(node, { pixelRatio: 3, backgroundColor: "#ffffff", cacheBust: true });
+      const { default: jsPDF } = await import("jspdf");
+      const w = node.offsetWidth;
+      const h = node.offsetHeight;
+      const orientation = w >= h ? "landscape" : "portrait";
+      const pdf = new jsPDF({ orientation, unit: "pt", format: "a4" });
+      const pw = pdf.internal.pageSize.getWidth();
+      const ph = pdf.internal.pageSize.getHeight();
+      const margin = 24;
+      const scale = Math.min((pw - margin * 2) / w, (ph - margin * 2) / h);
+      const iw = w * scale;
+      const ih = h * scale;
+      pdf.addImage(dataUrl, "PNG", (pw - iw) / 2, (ph - ih) / 2, iw, ih, undefined, "FAST");
+      pdf.save(`${headerTitle}.pdf`);
+      setPdfState("idle");
+    } catch {
+      setPdfState("err");
+      setTimeout(() => setPdfState("idle"), 2200);
+    }
+  }
 
   async function copyChart() {
     if (!ref.current) return;
