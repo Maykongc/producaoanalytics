@@ -111,7 +111,7 @@ function Index() {
     const i2End = combineDateAndTime(date, d2End);
     const rows = prepared.rows.filter((r) =>
       (zonaSel.length === 0 || zonaSel.includes(r.zona ?? "")) &&
-      (turnoSel.length === 0 || turnoSel.includes(r.turno ?? "")) &&
+      
       (funcionarioSel.length === 0 || funcionarioSel.includes(r.separador ?? "")),
     );
     return {
@@ -119,7 +119,7 @@ function Index() {
       i2: rankByInterval(rows, i2Start, i2End),
       i1Start, i1End, i2Start, i2End,
     };
-  }, [prepared, calculated, date, h1Start, h1End, d2Start, d2End, zonaSel, turnoSel, funcionarioSel]);
+  }, [prepared, calculated, date, h1Start, h1End, d2Start, d2End, zonaSel, funcionarioSel]);
 
 
   function calcular() {
@@ -205,16 +205,6 @@ function Index() {
               />
             </div>
 
-            <div className="md:col-span-3">
-              <label className="mb-1 block text-xs font-medium text-muted-foreground">Turno</label>
-              <MultiSelect
-                options={turnos}
-                selected={turnoSel}
-                onChange={setTurnoSel}
-                allLabel="Todos os turnos"
-              />
-            </div>
-
             <div className="md:col-span-5">
               <label className="mb-1 block text-xs font-medium text-muted-foreground">Funcionário</label>
               <MultiSelect
@@ -222,6 +212,8 @@ function Index() {
                 selected={funcionarioSel}
                 onChange={setFuncionarioSel}
                 allLabel="Todos os funcionários"
+                searchable
+                searchPlaceholder="Buscar por matrícula ou nome…"
               />
             </div>
 
