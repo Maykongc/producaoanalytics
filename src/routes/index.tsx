@@ -29,6 +29,7 @@ function Index() {
   const [selectedSheet, setSelectedSheet] = useState<string>("");
   const [prepared, setPrepared] = useState<Prepared | null>(null);
 
+  const [dateMode, setDateMode] = useState<"dia" | "mes" | "periodo">("dia");
   const [date, setDate] = useState<string>(() => {
     const d = new Date();
     const y = d.getFullYear();
@@ -36,11 +37,15 @@ function Index() {
     const dd = String(d.getDate()).padStart(2, "0");
     return `${y}-${m}-${dd}`;
   });
+  const [month, setMonth] = useState<string>("");
+  const [rangeStart, setRangeStart] = useState<string>("");
+  const [rangeEnd, setRangeEnd] = useState<string>("");
   const [h1Start, setH1Start] = useState("");
   const [h1End, setH1End] = useState("");
   const [d2Start, setD2Start] = useState("");
   const [d2End, setD2End] = useState("");
   const [meta, setMeta] = useState<number>(35);
+
   const [zonaSel, setZonaSel] = useState<string[]>([]);
   
   const [funcionarioSel, setFuncionarioSel] = useState<string[]>([]);
@@ -103,15 +108,28 @@ function Index() {
 
   const result = useMemo(() => {
     if (!prepared || !calculated) return null;
+    const rows = prepared.rows.filter((r) =>
+      (zonaSel.length === 0 || zonaSel.includes(r.zona ?? "")) &&
+      (funcionarioSel.length === 0 || funcionarioSel.includes(r.separador ?? "")),
+    );
+
+    if (dateMode !== "dia") {
+      const range = resolveRange(dateMode, month, rangeStart, rangeEnd);
+      if (!range) return { err: dateMode === "mes" ? "Selecione o mês." : "Selecione a data inicial e final do período." };
+      if (range.start > range.end) return { err: "A data inicial deve ser anterior à final." };
+      return {
+        i1: null, i2: null,
+        i1Start: null, i1End: null, i2Start: null, i2End: null,
+        ip: rankByInterval(rows, range.start, range.end),
+        ipStart: range.start, ipEnd: range.end,
+      };
+    }
+
     const has1 = Boolean(h1Start && h1End);
     const has2 = Boolean(d2Start && d2End);
     if (!has1 && !has2) return { err: "Preencha os horários de pelo menos um intervalo." };
     if (has1 && h1Start >= h1End) return { err: "Intervalo 1: hora inicial deve ser menor que a final" };
     if (has2 && d2Start >= d2End) return { err: "Intervalo 2: hora inicial deve ser menor que a final" };
-    const rows = prepared.rows.filter((r) =>
-      (zonaSel.length === 0 || zonaSel.includes(r.zona ?? "")) &&
-      (funcionarioSel.length === 0 || funcionarioSel.includes(r.separador ?? "")),
-    );
     const i1Start = has1 ? combineDateAndTime(date, h1Start) : null;
     const i1End = has1 ? combineDateAndTime(date, h1End) : null;
     const i2Start = has2 ? combineDateAndTime(date, d2Start) : null;
@@ -120,14 +138,26 @@ function Index() {
       i1: i1Start && i1End ? rankByInterval(rows, i1Start, i1End) : null,
       i2: i2Start && i2End ? rankByInterval(rows, i2Start, i2End) : null,
       i1Start, i1End, i2Start, i2End,
+      ip: null, ipStart: null, ipEnd: null,
     };
-  }, [prepared, calculated, date, h1Start, h1End, d2Start, d2End, zonaSel, funcionarioSel]);
+  }, [prepared, calculated, dateMode, date, month, rangeStart, rangeEnd, h1Start, h1End, d2Start, d2End, zonaSel, funcionarioSel]);
 
 
   function calcular() {
     setError("");
     if (!prepared) { setError("Faça o upload de um arquivo Excel primeiro."); return; }
     if (prepared.missing.length) { setError(`Colunas obrigatórias ausentes: ${prepared.missing.join(", ")}`); return; }
+    if (dateMode === "mes") {
+      if (!month) { setError("Selecione o mês."); return; }
+      setCalculated(true);
+      return;
+    }
+    if (dateMode === "periodo") {
+      if (!rangeStart || !rangeEnd) { setError("Selecione a data inicial e final do período."); return; }
+      if (rangeStart > rangeEnd) { setError("A data inicial deve ser anterior à final."); return; }
+      setCalculated(true);
+      return;
+    }
     if (!date) { setError("Selecione uma data."); return; }
     const has1 = Boolean(h1Start && h1End);
     const has2 = Boolean(d2Start && d2End);
@@ -139,6 +169,7 @@ function Index() {
     setCalculated(true);
   }
 
+
   function limpar() {
     setCalculated(false);
     setError("");
@@ -148,6 +179,10 @@ function Index() {
     setSelectedSheet("");
     setPrepared(null);
     setDate("");
+    setMonth("");
+    setRangeStart("");
+    setRangeEnd("");
+
     setZonaSel([]);
     setFuncionarioSel([]);
     setH1Start("");
@@ -192,15 +227,54 @@ function Index() {
               </label>
             </div>
 
-            <div className="md:col-span-3">
+            <div className="md:col-span-5">
               <label className="mb-1 block text-xs font-medium text-muted-foreground">Data</label>
-              <input
-                type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                className="h-10 w-full rounded-md border bg-background px-3 text-sm"
-              />
+              <div className="flex items-center gap-2">
+                <select
+                  value={dateMode}
+                  onChange={(e) => setDateMode(e.target.value as "dia" | "mes" | "periodo")}
+                  className="h-10 shrink-0 rounded-md border bg-background px-2 text-sm"
+                >
+                  <option value="dia">Dia</option>
+                  <option value="mes">Mês</option>
+                  <option value="periodo">Período</option>
+                </select>
+                {dateMode === "dia" && (
+                  <input
+                    type="date"
+                    value={date}
+                    onChange={(e) => setDate(e.target.value)}
+                    className="h-10 w-full rounded-md border bg-background px-3 text-sm"
+                  />
+                )}
+                {dateMode === "mes" && (
+                  <input
+                    type="month"
+                    value={month}
+                    onChange={(e) => setMonth(e.target.value)}
+                    className="h-10 w-full rounded-md border bg-background px-3 text-sm"
+                  />
+                )}
+                {dateMode === "periodo" && (
+                  <>
+                    <input
+                      type="date"
+                      value={rangeStart}
+                      onChange={(e) => setRangeStart(e.target.value)}
+                      className="h-10 w-full rounded-md border bg-background px-2 text-sm"
+                    />
+                    <span className="text-muted-foreground">—</span>
+                    <input
+                      type="date"
+                      value={rangeEnd}
+                      onChange={(e) => setRangeEnd(e.target.value)}
+                      className="h-10 w-full rounded-md border bg-background px-2 text-sm"
+                    />
+                  </>
+                )}
+              </div>
             </div>
+
 
             <div className="md:col-span-2">
               <label className="mb-1 block text-xs font-medium text-muted-foreground">Meta (prod/h)</label>
@@ -238,23 +312,28 @@ function Index() {
 
 
 
-            <div className="md:col-span-6">
-              <label className="mb-1 block text-xs font-medium text-muted-foreground">Intervalo 1 (hora)</label>
-              <div className="flex items-center gap-2">
-                <input type="time" value={h1Start} onChange={(e) => setH1Start(e.target.value)} className="h-10 w-full rounded-md border bg-background px-3 text-sm" />
-                <span className="text-muted-foreground">—</span>
-                <input type="time" value={h1End} onChange={(e) => setH1End(e.target.value)} className="h-10 w-full rounded-md border bg-background px-3 text-sm" />
-              </div>
-            </div>
+            {dateMode === "dia" && (
+              <>
+                <div className="md:col-span-6">
+                  <label className="mb-1 block text-xs font-medium text-muted-foreground">Intervalo 1 (hora)</label>
+                  <div className="flex items-center gap-2">
+                    <input type="time" value={h1Start} onChange={(e) => setH1Start(e.target.value)} className="h-10 w-full rounded-md border bg-background px-3 text-sm" />
+                    <span className="text-muted-foreground">—</span>
+                    <input type="time" value={h1End} onChange={(e) => setH1End(e.target.value)} className="h-10 w-full rounded-md border bg-background px-3 text-sm" />
+                  </div>
+                </div>
 
-            <div className="md:col-span-6">
-              <label className="mb-1 block text-xs font-medium text-muted-foreground">Intervalo 2 (dia)</label>
-              <div className="flex items-center gap-2">
-                <input type="time" value={d2Start} onChange={(e) => setD2Start(e.target.value)} className="h-10 w-full rounded-md border bg-background px-3 text-sm" />
-                <span className="text-muted-foreground">—</span>
-                <input type="time" value={d2End} onChange={(e) => setD2End(e.target.value)} className="h-10 w-full rounded-md border bg-background px-3 text-sm" />
-              </div>
-            </div>
+                <div className="md:col-span-6">
+                  <label className="mb-1 block text-xs font-medium text-muted-foreground">Intervalo 2 (dia)</label>
+                  <div className="flex items-center gap-2">
+                    <input type="time" value={d2Start} onChange={(e) => setD2Start(e.target.value)} className="h-10 w-full rounded-md border bg-background px-3 text-sm" />
+                    <span className="text-muted-foreground">—</span>
+                    <input type="time" value={d2End} onChange={(e) => setD2End(e.target.value)} className="h-10 w-full rounded-md border bg-background px-3 text-sm" />
+                  </div>
+                </div>
+              </>
+            )}
+
 
             <div className="flex items-end gap-2 md:col-span-6">
               <button
@@ -321,8 +400,22 @@ function Index() {
                 meta={meta}
               />
             )}
+            {result.ip && result.ipStart && result.ipEnd && (
+              <ChartReport
+                kind="dia"
+                headerTitle={`Produtividade por ${dateMode === "mes" ? "Mês" : "Período"} - Separação - Zona (${zonaLabel})`}
+                chartTitle={`Desempenho por separador (prod/h) - ${dateMode === "mes" ? "Mês" : "Período"}`}
+                intervaloLabel={`${fmtDay(result.ipStart)} a ${fmtDay(result.ipEnd)}`}
+                ranking={result.ip.ranking}
+                media={result.ip.media}
+                total={result.ip.totalGeral}
+                separadoresAtivos={result.ip.separadoresAtivos}
+                meta={meta}
+              />
+            )}
           </>
           );
+
         })()}
 
         {!result && (
@@ -534,6 +627,33 @@ function fmtInt(n: number) { return new Intl.NumberFormat("pt-BR").format(Math.r
 function fmt1(n: number) { return new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(n); }
 function pad(n: number) { return n.toString().padStart(2, "0"); }
 function fmtDay(d: Date) { return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}`; }
+
+function resolveRange(
+  mode: "mes" | "periodo",
+  month: string,
+  rangeStart: string,
+  rangeEnd: string,
+): { start: Date; end: Date } | null {
+  if (mode === "mes") {
+    if (!month) return null;
+    const [y, m] = month.split("-").map(Number);
+    if (!y || !m) return null;
+    return {
+      start: new Date(y, m - 1, 1, 0, 0, 0),
+      end: new Date(y, m, 0, 23, 59, 59),
+    };
+  }
+  if (!rangeStart || !rangeEnd) return null;
+  const [y1, m1, d1] = rangeStart.split("-").map(Number);
+  const [y2, m2, d2] = rangeEnd.split("-").map(Number);
+  if (!y1 || !y2) return null;
+  return {
+    start: new Date(y1, m1 - 1, d1, 0, 0, 0),
+    end: new Date(y2, m2 - 1, d2, 23, 59, 59),
+  };
+}
+
+
 
 function MultiSelect({
   options, selected, onChange, allLabel, placeholder, searchable, searchPlaceholder,
