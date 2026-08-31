@@ -102,21 +102,22 @@ function Index() {
 
   const result = useMemo(() => {
     if (!prepared || !calculated) return null;
-    if (!h1Start || !h1End || !d2Start || !d2End) return { err: "Preencha os horários dos intervalos." };
-    if (h1Start >= h1End) return { err: "Intervalo 1: hora inicial deve ser menor que a final" };
-    if (d2Start >= d2End) return { err: "Intervalo 2: hora inicial deve ser menor que a final" };
-    const i1Start = combineDateAndTime(date, h1Start);
-    const i1End = combineDateAndTime(date, h1End);
-    const i2Start = combineDateAndTime(date, d2Start);
-    const i2End = combineDateAndTime(date, d2End);
+    const has1 = Boolean(h1Start && h1End);
+    const has2 = Boolean(d2Start && d2End);
+    if (!has1 && !has2) return { err: "Preencha os horários de pelo menos um intervalo." };
+    if (has1 && h1Start >= h1End) return { err: "Intervalo 1: hora inicial deve ser menor que a final" };
+    if (has2 && d2Start >= d2End) return { err: "Intervalo 2: hora inicial deve ser menor que a final" };
     const rows = prepared.rows.filter((r) =>
       (zonaSel.length === 0 || zonaSel.includes(r.zona ?? "")) &&
-      
       (funcionarioSel.length === 0 || funcionarioSel.includes(r.separador ?? "")),
     );
+    const i1Start = has1 ? combineDateAndTime(date, h1Start) : null;
+    const i1End = has1 ? combineDateAndTime(date, h1End) : null;
+    const i2Start = has2 ? combineDateAndTime(date, d2Start) : null;
+    const i2End = has2 ? combineDateAndTime(date, d2End) : null;
     return {
-      i1: rankByInterval(rows, i1Start, i1End),
-      i2: rankByInterval(rows, i2Start, i2End),
+      i1: i1Start && i1End ? rankByInterval(rows, i1Start, i1End) : null,
+      i2: i2Start && i2End ? rankByInterval(rows, i2Start, i2End) : null,
       i1Start, i1End, i2Start, i2End,
     };
   }, [prepared, calculated, date, h1Start, h1End, d2Start, d2End, zonaSel, funcionarioSel]);
@@ -127,10 +128,13 @@ function Index() {
     if (!prepared) { setError("Faça o upload de um arquivo Excel primeiro."); return; }
     if (prepared.missing.length) { setError(`Colunas obrigatórias ausentes: ${prepared.missing.join(", ")}`); return; }
     if (!date) { setError("Selecione uma data."); return; }
-    if (!h1Start || !h1End) { setError("Intervalo 1: preencha as horas inicial e final."); return; }
-    if (!d2Start || !d2End) { setError("Intervalo 2: preencha as horas inicial e final."); return; }
-    if (h1Start >= h1End) { setError("Intervalo 1: hora inicial deve ser menor que a final."); return; }
-    if (d2Start >= d2End) { setError("Intervalo 2: hora inicial deve ser menor que a final."); return; }
+    const has1 = Boolean(h1Start && h1End);
+    const has2 = Boolean(d2Start && d2End);
+    if (!has1 && !has2) { setError("Preencha os horários de pelo menos um intervalo (hora ou dia)."); return; }
+    if ((h1Start || h1End) && !has1) { setError("Intervalo 1: preencha as horas inicial e final."); return; }
+    if ((d2Start || d2End) && !has2) { setError("Intervalo 2: preencha as horas inicial e final."); return; }
+    if (has1 && h1Start >= h1End) { setError("Intervalo 1: hora inicial deve ser menor que a final."); return; }
+    if (has2 && d2Start >= d2End) { setError("Intervalo 2: hora inicial deve ser menor que a final."); return; }
     setCalculated(true);
   }
 
@@ -276,28 +280,32 @@ function Index() {
           const zonaLabel = zonaSel.length === 0 ? "Todas" : zonaSel.join(", ");
           return (
           <>
-            <ChartReport
-              kind="hora"
-              headerTitle={`Produtividade por Hora - Separação - Zona (${zonaLabel})`}
-              chartTitle={`Desempenho por separador (prod/h) - Intervalo 1 (Hora)`}
-              intervaloLabel={`${fmtDay(result.i1Start)} ${h1Start} às ${h1End}`}
-              ranking={result.i1.ranking}
-              media={result.i1.media}
-              total={result.i1.totalGeral}
-              separadoresAtivos={result.i1.separadoresAtivos}
-              meta={meta}
-            />
-            <ChartReport
-              kind="dia"
-              headerTitle={`Produtividade por Dia - Separação - Zona (${zonaLabel})`}
-              chartTitle={`Desempenho por separador (prod/h) - Intervalo 2 (Dia)`}
-              intervaloLabel={`${fmtDay(result.i2Start)}`}
-              ranking={result.i2.ranking}
-              media={result.i2.media}
-              total={result.i2.totalGeral}
-              separadoresAtivos={result.i2.separadoresAtivos}
-              meta={meta}
-            />
+            {result.i1 && result.i1Start && (
+              <ChartReport
+                kind="hora"
+                headerTitle={`Produtividade por Hora - Separação - Zona (${zonaLabel})`}
+                chartTitle={`Desempenho por separador (prod/h) - Intervalo 1 (Hora)`}
+                intervaloLabel={`${fmtDay(result.i1Start)} ${h1Start} às ${h1End}`}
+                ranking={result.i1.ranking}
+                media={result.i1.media}
+                total={result.i1.totalGeral}
+                separadoresAtivos={result.i1.separadoresAtivos}
+                meta={meta}
+              />
+            )}
+            {result.i2 && result.i2Start && (
+              <ChartReport
+                kind="dia"
+                headerTitle={`Produtividade por Dia - Separação - Zona (${zonaLabel})`}
+                chartTitle={`Desempenho por separador (prod/h) - Intervalo 2 (Dia)`}
+                intervaloLabel={`${fmtDay(result.i2Start)}`}
+                ranking={result.i2.ranking}
+                media={result.i2.media}
+                total={result.i2.totalGeral}
+                separadoresAtivos={result.i2.separadoresAtivos}
+                meta={meta}
+              />
+            )}
           </>
           );
         })()}
