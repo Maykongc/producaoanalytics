@@ -628,6 +628,33 @@ function fmt1(n: number) { return new Intl.NumberFormat("pt-BR", { minimumFracti
 function pad(n: number) { return n.toString().padStart(2, "0"); }
 function fmtDay(d: Date) { return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}`; }
 
+function resolveRange(
+  mode: "mes" | "periodo",
+  month: string,
+  rangeStart: string,
+  rangeEnd: string,
+): { start: Date; end: Date } | null {
+  if (mode === "mes") {
+    if (!month) return null;
+    const [y, m] = month.split("-").map(Number);
+    if (!y || !m) return null;
+    return {
+      start: new Date(y, m - 1, 1, 0, 0, 0),
+      end: new Date(y, m, 0, 23, 59, 59),
+    };
+  }
+  if (!rangeStart || !rangeEnd) return null;
+  const [y1, m1, d1] = rangeStart.split("-").map(Number);
+  const [y2, m2, d2] = rangeEnd.split("-").map(Number);
+  if (!y1 || !y2) return null;
+  return {
+    start: new Date(y1, m1 - 1, d1, 0, 0, 0),
+    end: new Date(y2, m2 - 1, d2, 23, 59, 59),
+  };
+}
+
+
+
 function MultiSelect({
   options, selected, onChange, allLabel, placeholder, searchable, searchPlaceholder,
 }: {
