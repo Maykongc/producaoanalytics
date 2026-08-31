@@ -410,7 +410,7 @@ function ChartReport({
 
   return (
     <section className="rounded-xl border bg-card p-5 shadow-sm">
-      <div className="mb-3 flex items-center justify-end">
+      <div className="mb-3 flex items-center justify-end gap-2">
         <button
           onClick={copyChart}
           disabled={data.length === 0 || copyState === "copying"}
