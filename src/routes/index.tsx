@@ -394,7 +394,7 @@ function Index() {
                 kind="hora"
                 headerTitle={`Produtividade por Hora - Separação - Zona (${zonaLabel})`}
                 chartTitle={`Desempenho por separador (prod/h) - Intervalo 1 (Hora)`}
-                intervaloLabel={`${fmtDay(result.i1Start)} ${h1Start} às ${h1End}`}
+                intervaloLabel={dateMode === "dia" ? `${fmtDay(result.i1Start)} ${h1Start} às ${h1End}` : `${fmtDay(result.i1Start)} a ${fmtDay(result.i1End!)} • ${h1Start} às ${h1End}`}
                 ranking={result.i1.ranking}
                 media={result.i1.media}
                 total={result.i1.totalGeral}
@@ -407,7 +407,7 @@ function Index() {
                 kind="dia"
                 headerTitle={`Produtividade por Dia - Separação - Zona (${zonaLabel})`}
                 chartTitle={`Desempenho por separador (prod/h) - Intervalo 2 (Dia)`}
-                intervaloLabel={`${fmtDay(result.i2Start)}`}
+                intervaloLabel={dateMode === "dia" ? `${fmtDay(result.i2Start)}` : `${fmtDay(result.i2Start)} a ${fmtDay(result.i2End!)} • ${d2Start} às ${d2End}`}
                 ranking={result.i2.ranking}
                 media={result.i2.media}
                 total={result.i2.totalGeral}
