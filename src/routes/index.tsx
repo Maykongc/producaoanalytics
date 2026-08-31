@@ -328,7 +328,6 @@ function Index() {
 
 
             <>
-              <>
 
                 <div className="md:col-span-6">
                   <label className="mb-1 block text-xs font-medium text-muted-foreground">Intervalo 1 (hora)</label>
@@ -347,8 +346,8 @@ function Index() {
                     <input type="time" value={d2End} onChange={(e) => setD2End(e.target.value)} className="h-10 w-full rounded-md border bg-background px-3 text-sm" />
                   </div>
                 </div>
-              </>
-            )}
+            </>
+
 
 
             <div className="flex items-end gap-2 md:col-span-6">
