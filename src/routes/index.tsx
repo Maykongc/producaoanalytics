@@ -638,6 +638,15 @@ function ChartReport({
   );
 }
 
+function filterByTimeOfDay(rows: Prepared["rows"], start: string, end: string) {
+  const toMin = (t: string) => { const [h, m] = t.split(":").map(Number); return h * 60 + m; };
+  const s = toMin(start), e = toMin(end);
+  return rows.filter((r) => {
+    const m = r.dt.getHours() * 60 + r.dt.getMinutes();
+    return m >= s && m <= e;
+  });
+}
+
 function fmtInt(n: number) { return new Intl.NumberFormat("pt-BR").format(Math.round(n)); }
 function fmt1(n: number) { return new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(n); }
 function pad(n: number) { return n.toString().padStart(2, "0"); }
