@@ -117,6 +117,20 @@ function Index() {
       const range = resolveRange(dateMode, month, rangeStart, rangeEnd);
       if (!range) return { err: dateMode === "mes" ? "Selecione o mês." : "Selecione a data inicial e final do período." };
       if (range.start > range.end) return { err: "A data inicial deve ser anterior à final." };
+      const p1 = Boolean(h1Start && h1End);
+      const p2 = Boolean(d2Start && d2End);
+      if (p1 && h1Start >= h1End) return { err: "Intervalo 1: hora inicial deve ser menor que a final" };
+      if (p2 && d2Start >= d2End) return { err: "Intervalo 2: hora inicial deve ser menor que a final" };
+      if (p1 || p2) {
+        return {
+          i1: p1 ? rankByInterval(filterByTimeOfDay(rows, h1Start, h1End), range.start, range.end) : null,
+          i2: p2 ? rankByInterval(filterByTimeOfDay(rows, d2Start, d2End), range.start, range.end) : null,
+          i1Start: p1 ? range.start : null, i1End: p1 ? range.end : null,
+          i2Start: p2 ? range.start : null, i2End: p2 ? range.end : null,
+          ip: null, ipStart: null, ipEnd: null,
+          rangeStartDate: range.start, rangeEndDate: range.end,
+        };
+      }
       return {
         i1: null, i2: null,
         i1Start: null, i1End: null, i2Start: null, i2End: null,
@@ -124,6 +138,7 @@ function Index() {
         ipStart: range.start, ipEnd: range.end,
       };
     }
+
 
     const has1 = Boolean(h1Start && h1End);
     const has2 = Boolean(d2Start && d2End);
@@ -147,14 +162,16 @@ function Index() {
     setError("");
     if (!prepared) { setError("Faça o upload de um arquivo Excel primeiro."); return; }
     if (prepared.missing.length) { setError(`Colunas obrigatórias ausentes: ${prepared.missing.join(", ")}`); return; }
-    if (dateMode === "mes") {
-      if (!month) { setError("Selecione o mês."); return; }
-      setCalculated(true);
-      return;
-    }
-    if (dateMode === "periodo") {
-      if (!rangeStart || !rangeEnd) { setError("Selecione a data inicial e final do período."); return; }
-      if (rangeStart > rangeEnd) { setError("A data inicial deve ser anterior à final."); return; }
+    if (dateMode !== "dia") {
+      if (dateMode === "mes" && !month) { setError("Selecione o mês."); return; }
+      if (dateMode === "periodo") {
+        if (!rangeStart || !rangeEnd) { setError("Selecione a data inicial e final do período."); return; }
+        if (rangeStart > rangeEnd) { setError("A data inicial deve ser anterior à final."); return; }
+      }
+      if ((h1Start || h1End) && !(h1Start && h1End)) { setError("Intervalo 1: preencha as horas inicial e final."); return; }
+      if ((d2Start || d2End) && !(d2Start && d2End)) { setError("Intervalo 2: preencha as horas inicial e final."); return; }
+      if (h1Start && h1End && h1Start >= h1End) { setError("Intervalo 1: hora inicial deve ser menor que a final."); return; }
+      if (d2Start && d2End && d2Start >= d2End) { setError("Intervalo 2: hora inicial deve ser menor que a final."); return; }
       setCalculated(true);
       return;
     }
@@ -312,8 +329,8 @@ function Index() {
 
 
 
-            {dateMode === "dia" && (
-              <>
+            <>
+
                 <div className="md:col-span-6">
                   <label className="mb-1 block text-xs font-medium text-muted-foreground">Intervalo 1 (hora)</label>
                   <div className="flex items-center gap-2">
@@ -331,8 +348,8 @@ function Index() {
                     <input type="time" value={d2End} onChange={(e) => setD2End(e.target.value)} className="h-10 w-full rounded-md border bg-background px-3 text-sm" />
                   </div>
                 </div>
-              </>
-            )}
+            </>
+
 
 
             <div className="flex items-end gap-2 md:col-span-6">
@@ -379,7 +396,7 @@ function Index() {
                 kind="hora"
                 headerTitle={`Produtividade por Hora - Separação - Zona (${zonaLabel})`}
                 chartTitle={`Desempenho por separador (prod/h) - Intervalo 1 (Hora)`}
-                intervaloLabel={`${fmtDay(result.i1Start)} ${h1Start} às ${h1End}`}
+                intervaloLabel={dateMode === "dia" ? `${fmtDay(result.i1Start)} ${h1Start} às ${h1End}` : `${fmtDay(result.i1Start)} a ${fmtDay(result.i1End!)} • ${h1Start} às ${h1End}`}
                 ranking={result.i1.ranking}
                 media={result.i1.media}
                 total={result.i1.totalGeral}
@@ -392,7 +409,7 @@ function Index() {
                 kind="dia"
                 headerTitle={`Produtividade por Dia - Separação - Zona (${zonaLabel})`}
                 chartTitle={`Desempenho por separador (prod/h) - Intervalo 2 (Dia)`}
-                intervaloLabel={`${fmtDay(result.i2Start)}`}
+                intervaloLabel={dateMode === "dia" ? `${fmtDay(result.i2Start)}` : `${fmtDay(result.i2Start)} a ${fmtDay(result.i2End!)} • ${d2Start} às ${d2End}`}
                 ranking={result.i2.ranking}
                 media={result.i2.media}
                 total={result.i2.totalGeral}
@@ -621,6 +638,15 @@ function ChartReport({
       )}
     </section>
   );
+}
+
+function filterByTimeOfDay(rows: Prepared["rows"], start: string, end: string) {
+  const toMin = (t: string) => { const [h, m] = t.split(":").map(Number); return h * 60 + m; };
+  const s = toMin(start), e = toMin(end);
+  return rows.filter((r) => {
+    const m = r.dt.getHours() * 60 + r.dt.getMinutes();
+    return m >= s && m <= e;
+  });
 }
 
 function fmtInt(n: number) { return new Intl.NumberFormat("pt-BR").format(Math.round(n)); }
