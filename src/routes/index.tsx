@@ -162,14 +162,16 @@ function Index() {
     setError("");
     if (!prepared) { setError("Faça o upload de um arquivo Excel primeiro."); return; }
     if (prepared.missing.length) { setError(`Colunas obrigatórias ausentes: ${prepared.missing.join(", ")}`); return; }
-    if (dateMode === "mes") {
-      if (!month) { setError("Selecione o mês."); return; }
-      setCalculated(true);
-      return;
-    }
-    if (dateMode === "periodo") {
-      if (!rangeStart || !rangeEnd) { setError("Selecione a data inicial e final do período."); return; }
-      if (rangeStart > rangeEnd) { setError("A data inicial deve ser anterior à final."); return; }
+    if (dateMode !== "dia") {
+      if (dateMode === "mes" && !month) { setError("Selecione o mês."); return; }
+      if (dateMode === "periodo") {
+        if (!rangeStart || !rangeEnd) { setError("Selecione a data inicial e final do período."); return; }
+        if (rangeStart > rangeEnd) { setError("A data inicial deve ser anterior à final."); return; }
+      }
+      if ((h1Start || h1End) && !(h1Start && h1End)) { setError("Intervalo 1: preencha as horas inicial e final."); return; }
+      if ((d2Start || d2End) && !(d2Start && d2End)) { setError("Intervalo 2: preencha as horas inicial e final."); return; }
+      if (h1Start && h1End && h1Start >= h1End) { setError("Intervalo 1: hora inicial deve ser menor que a final."); return; }
+      if (d2Start && d2End && d2Start >= d2End) { setError("Intervalo 2: hora inicial deve ser menor que a final."); return; }
       setCalculated(true);
       return;
     }
