@@ -22,6 +22,7 @@ export const Route = createFileRoute("/")({
 });
 
 function Index() {
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [fileName, setFileName] = useState<string>("");
   const [sheets, setSheets] = useState<string[]>([]);
   const [rowsBySheet, setRowsBySheet] = useState<Record<string, Record<string, unknown>[]>>({});
