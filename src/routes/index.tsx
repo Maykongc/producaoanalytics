@@ -413,8 +413,9 @@ function Index() {
                 meta={meta}
               />
             )}
-
+          </>
           );
+
         })()}
 
         {!result && (
