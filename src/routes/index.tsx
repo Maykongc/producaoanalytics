@@ -422,6 +422,14 @@ function ChartReport({
             : copyState === "err" ? "Erro ao copiar"
             : "Copiar gráfico"}
         </button>
+        <button
+          onClick={downloadPdf}
+          disabled={data.length === 0 || pdfState === "working"}
+          className="rounded-md border bg-background px-3 py-1.5 text-xs font-medium hover:bg-accent disabled:opacity-50"
+          title="Baixar gráfico em PDF"
+        >
+          {pdfState === "working" ? "Gerando…" : pdfState === "err" ? "Erro no PDF" : "Baixar PDF"}
+        </button>
       </div>
       {data.length === 0 ? (
         <div className="py-12 text-center text-sm text-muted-foreground">Sem dados no intervalo.</div>
