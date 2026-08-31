@@ -523,24 +523,38 @@ function MultiSelect({
       </button>
       {open && (
         <div className="absolute z-20 mt-1 max-h-60 w-full overflow-auto rounded-md border bg-popover p-1 shadow-md">
-          <div className="sticky top-0 z-10 flex gap-1 border-b bg-popover pb-1 mb-1">
-            <button
-              type="button"
-              onClick={() => onChange(options)}
-              className="flex-1 rounded px-2 py-1.5 text-left text-xs font-medium text-foreground hover:bg-accent"
-            >
-              {allLabel}
-            </button>
-            <button
-              type="button"
-              onClick={() => onChange([])}
-              className="rounded px-2 py-1.5 text-left text-xs text-muted-foreground hover:bg-accent"
-            >
-              Limpar seleção
-            </button>
+          <div className="sticky top-0 z-10 border-b bg-popover pb-1 mb-1">
+            {searchable && (
+              <input
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder={searchPlaceholder ?? "Buscar…"}
+                className="mb-1 h-8 w-full rounded border bg-background px-2 text-sm"
+              />
+            )}
+            <div className="flex gap-1">
+              <button
+                type="button"
+                onClick={() => onChange(options)}
+                className="flex-1 rounded px-2 py-1.5 text-left text-xs font-medium text-foreground hover:bg-accent"
+              >
+                {allLabel}
+              </button>
+              <button
+                type="button"
+                onClick={() => onChange([])}
+                className="rounded px-2 py-1.5 text-left text-xs text-muted-foreground hover:bg-accent"
+              >
+                Limpar seleção
+              </button>
+            </div>
           </div>
 
-          {options.map((o) => (
+          {visible.length === 0 && (
+            <div className="px-2 py-3 text-center text-xs text-muted-foreground">Nenhum resultado</div>
+          )}
+          {visible.map((o) => (
             <label key={o} className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm hover:bg-accent">
               <input
                 type="checkbox"
