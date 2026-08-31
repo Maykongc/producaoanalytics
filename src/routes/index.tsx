@@ -141,6 +141,18 @@ function Index() {
   function limpar() {
     setCalculated(false);
     setError("");
+    setFileName("");
+    setSheets([]);
+    setRowsBySheet({});
+    setSelectedSheet("");
+    setPrepared(null);
+    setZonaSel([]);
+    setFuncionarioSel([]);
+    setH1Start("");
+    setH1End("");
+    setD2Start("");
+    setD2End("");
+    if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
   return (
