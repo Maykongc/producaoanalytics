@@ -478,16 +478,24 @@ function pad(n: number) { return n.toString().padStart(2, "0"); }
 function fmtDay(d: Date) { return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}`; }
 
 function MultiSelect({
-  options, selected, onChange, allLabel, placeholder,
+  options, selected, onChange, allLabel, placeholder, searchable, searchPlaceholder,
 }: {
   options: string[];
   selected: string[];
   onChange: (v: string[]) => void;
   allLabel: string;
   placeholder?: string;
+  searchable?: boolean;
+  searchPlaceholder?: string;
 }) {
   const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
   const box = useRef<HTMLDivElement>(null);
+  const visible = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return options;
+    return options.filter((o) => o.toLowerCase().includes(q));
+  }, [options, query]);
 
   useEffect(() => {
     function onDoc(e: MouseEvent) {
