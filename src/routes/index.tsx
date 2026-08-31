@@ -509,7 +509,9 @@ function MultiSelect({
     onChange(selected.includes(v) ? selected.filter((x) => x !== v) : [...selected, v]);
   }
 
-  const label = selected.length === 0 ? (placeholder ?? allLabel) : selected.join(", ");
+  const label = selected.length === 0
+    ? (placeholder ?? allLabel)
+    : (options.length > 0 && selected.length === options.length ? allLabel : selected.join(", "));
 
   return (
     <div ref={box} className="relative">
