@@ -147,6 +147,7 @@ function Index() {
     setRowsBySheet({});
     setSelectedSheet("");
     setPrepared(null);
+    setDate("");
     setZonaSel([]);
     setFuncionarioSel([]);
     setH1Start("");
