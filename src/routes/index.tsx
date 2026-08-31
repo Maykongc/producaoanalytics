@@ -227,15 +227,54 @@ function Index() {
               </label>
             </div>
 
-            <div className="md:col-span-3">
+            <div className="md:col-span-5">
               <label className="mb-1 block text-xs font-medium text-muted-foreground">Data</label>
-              <input
-                type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                className="h-10 w-full rounded-md border bg-background px-3 text-sm"
-              />
+              <div className="flex items-center gap-2">
+                <select
+                  value={dateMode}
+                  onChange={(e) => setDateMode(e.target.value as "dia" | "mes" | "periodo")}
+                  className="h-10 shrink-0 rounded-md border bg-background px-2 text-sm"
+                >
+                  <option value="dia">Dia</option>
+                  <option value="mes">Mês</option>
+                  <option value="periodo">Período</option>
+                </select>
+                {dateMode === "dia" && (
+                  <input
+                    type="date"
+                    value={date}
+                    onChange={(e) => setDate(e.target.value)}
+                    className="h-10 w-full rounded-md border bg-background px-3 text-sm"
+                  />
+                )}
+                {dateMode === "mes" && (
+                  <input
+                    type="month"
+                    value={month}
+                    onChange={(e) => setMonth(e.target.value)}
+                    className="h-10 w-full rounded-md border bg-background px-3 text-sm"
+                  />
+                )}
+                {dateMode === "periodo" && (
+                  <>
+                    <input
+                      type="date"
+                      value={rangeStart}
+                      onChange={(e) => setRangeStart(e.target.value)}
+                      className="h-10 w-full rounded-md border bg-background px-2 text-sm"
+                    />
+                    <span className="text-muted-foreground">—</span>
+                    <input
+                      type="date"
+                      value={rangeEnd}
+                      onChange={(e) => setRangeEnd(e.target.value)}
+                      className="h-10 w-full rounded-md border bg-background px-2 text-sm"
+                    />
+                  </>
+                )}
+              </div>
             </div>
+
 
             <div className="md:col-span-2">
               <label className="mb-1 block text-xs font-medium text-muted-foreground">Meta (prod/h)</label>
