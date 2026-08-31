@@ -41,7 +41,7 @@ function Index() {
   const [d2End, setD2End] = useState("");
   const [meta, setMeta] = useState<number>(35);
   const [zonaSel, setZonaSel] = useState<string[]>([]);
-  const [turnoSel, setTurnoSel] = useState<string[]>([]);
+  
   const [funcionarioSel, setFuncionarioSel] = useState<string[]>([]);
 
 
@@ -87,19 +87,17 @@ function Index() {
     return Array.from(s).sort();
   }, [prepared]);
 
-  const turnos = useMemo(() => {
-    if (!prepared) return [] as string[];
-    const s = new Set<string>();
-    for (const r of prepared.rows) if (r.turno) s.add(r.turno);
-    return Array.from(s).sort();
-  }, [prepared]);
-
   const funcionarios = useMemo(() => {
     if (!prepared) return [] as string[];
     const s = new Set<string>();
     for (const r of prepared.rows) if (r.separador) s.add(r.separador);
     return Array.from(s).sort();
   }, [prepared]);
+
+  useEffect(() => {
+    setFuncionarioSel(funcionarios);
+  }, [funcionarios]);
+
 
 
   const result = useMemo(() => {
@@ -113,7 +111,7 @@ function Index() {
     const i2End = combineDateAndTime(date, d2End);
     const rows = prepared.rows.filter((r) =>
       (zonaSel.length === 0 || zonaSel.includes(r.zona ?? "")) &&
-      (turnoSel.length === 0 || turnoSel.includes(r.turno ?? "")) &&
+      
       (funcionarioSel.length === 0 || funcionarioSel.includes(r.separador ?? "")),
     );
     return {
@@ -121,7 +119,7 @@ function Index() {
       i2: rankByInterval(rows, i2Start, i2End),
       i1Start, i1End, i2Start, i2End,
     };
-  }, [prepared, calculated, date, h1Start, h1End, d2Start, d2End, zonaSel, turnoSel, funcionarioSel]);
+  }, [prepared, calculated, date, h1Start, h1End, d2Start, d2End, zonaSel, funcionarioSel]);
 
 
   function calcular() {
@@ -207,16 +205,6 @@ function Index() {
               />
             </div>
 
-            <div className="md:col-span-3">
-              <label className="mb-1 block text-xs font-medium text-muted-foreground">Turno</label>
-              <MultiSelect
-                options={turnos}
-                selected={turnoSel}
-                onChange={setTurnoSel}
-                allLabel="Todos os turnos"
-              />
-            </div>
-
             <div className="md:col-span-5">
               <label className="mb-1 block text-xs font-medium text-muted-foreground">Funcionário</label>
               <MultiSelect
@@ -224,6 +212,8 @@ function Index() {
                 selected={funcionarioSel}
                 onChange={setFuncionarioSel}
                 allLabel="Todos os funcionários"
+                searchable
+                searchPlaceholder="Buscar por matrícula ou nome…"
               />
             </div>
 
@@ -488,16 +478,24 @@ function pad(n: number) { return n.toString().padStart(2, "0"); }
 function fmtDay(d: Date) { return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}`; }
 
 function MultiSelect({
-  options, selected, onChange, allLabel, placeholder,
+  options, selected, onChange, allLabel, placeholder, searchable, searchPlaceholder,
 }: {
   options: string[];
   selected: string[];
   onChange: (v: string[]) => void;
   allLabel: string;
   placeholder?: string;
+  searchable?: boolean;
+  searchPlaceholder?: string;
 }) {
   const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
   const box = useRef<HTMLDivElement>(null);
+  const visible = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return options;
+    return options.filter((o) => o.toLowerCase().includes(q));
+  }, [options, query]);
 
   useEffect(() => {
     function onDoc(e: MouseEvent) {
@@ -511,7 +509,9 @@ function MultiSelect({
     onChange(selected.includes(v) ? selected.filter((x) => x !== v) : [...selected, v]);
   }
 
-  const label = selected.length === 0 ? (placeholder ?? allLabel) : selected.join(", ");
+  const label = selected.length === 0
+    ? (placeholder ?? allLabel)
+    : (options.length > 0 && selected.length === options.length ? allLabel : selected.join(", "));
 
   return (
     <div ref={box} className="relative">
@@ -525,24 +525,38 @@ function MultiSelect({
       </button>
       {open && (
         <div className="absolute z-20 mt-1 max-h-60 w-full overflow-auto rounded-md border bg-popover p-1 shadow-md">
-          <div className="sticky top-0 z-10 flex gap-1 border-b bg-popover pb-1 mb-1">
-            <button
-              type="button"
-              onClick={() => onChange(options)}
-              className="flex-1 rounded px-2 py-1.5 text-left text-xs font-medium text-foreground hover:bg-accent"
-            >
-              {allLabel}
-            </button>
-            <button
-              type="button"
-              onClick={() => onChange([])}
-              className="rounded px-2 py-1.5 text-left text-xs text-muted-foreground hover:bg-accent"
-            >
-              Limpar seleção
-            </button>
+          <div className="sticky top-0 z-10 border-b bg-popover pb-1 mb-1">
+            {searchable && (
+              <input
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder={searchPlaceholder ?? "Buscar…"}
+                className="mb-1 h-8 w-full rounded border bg-background px-2 text-sm"
+              />
+            )}
+            <div className="flex gap-1">
+              <button
+                type="button"
+                onClick={() => onChange(options)}
+                className="flex-1 rounded px-2 py-1.5 text-left text-xs font-medium text-foreground hover:bg-accent"
+              >
+                {allLabel}
+              </button>
+              <button
+                type="button"
+                onClick={() => onChange([])}
+                className="rounded px-2 py-1.5 text-left text-xs text-muted-foreground hover:bg-accent"
+              >
+                Limpar seleção
+              </button>
+            </div>
           </div>
 
-          {options.map((o) => (
+          {visible.length === 0 && (
+            <div className="px-2 py-3 text-center text-xs text-muted-foreground">Nenhum resultado</div>
+          )}
+          {visible.map((o) => (
             <label key={o} className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm hover:bg-accent">
               <input
                 type="checkbox"
