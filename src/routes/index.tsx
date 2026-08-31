@@ -400,7 +400,20 @@ function Index() {
                 meta={meta}
               />
             )}
-          </>
+            {result.ip && result.ipStart && result.ipEnd && (
+              <ChartReport
+                kind="dia"
+                headerTitle={`Produtividade por ${dateMode === "mes" ? "Mês" : "Período"} - Separação - Zona (${zonaLabel})`}
+                chartTitle={`Desempenho por separador (prod/h) - ${dateMode === "mes" ? "Mês" : "Período"}`}
+                intervaloLabel={`${fmtDay(result.ipStart)} a ${fmtDay(result.ipEnd)}`}
+                ranking={result.ip.ranking}
+                media={result.ip.media}
+                total={result.ip.totalGeral}
+                separadoresAtivos={result.ip.separadoresAtivos}
+                meta={meta}
+              />
+            )}
+
           );
         })()}
 
