@@ -179,6 +179,10 @@ function Index() {
     setSelectedSheet("");
     setPrepared(null);
     setDate("");
+    setMonth("");
+    setRangeStart("");
+    setRangeEnd("");
+
     setZonaSel([]);
     setFuncionarioSel([]);
     setH1Start("");
