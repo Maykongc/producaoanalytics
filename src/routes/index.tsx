@@ -280,28 +280,32 @@ function Index() {
           const zonaLabel = zonaSel.length === 0 ? "Todas" : zonaSel.join(", ");
           return (
           <>
-            <ChartReport
-              kind="hora"
-              headerTitle={`Produtividade por Hora - Separação - Zona (${zonaLabel})`}
-              chartTitle={`Desempenho por separador (prod/h) - Intervalo 1 (Hora)`}
-              intervaloLabel={`${fmtDay(result.i1Start)} ${h1Start} às ${h1End}`}
-              ranking={result.i1.ranking}
-              media={result.i1.media}
-              total={result.i1.totalGeral}
-              separadoresAtivos={result.i1.separadoresAtivos}
-              meta={meta}
-            />
-            <ChartReport
-              kind="dia"
-              headerTitle={`Produtividade por Dia - Separação - Zona (${zonaLabel})`}
-              chartTitle={`Desempenho por separador (prod/h) - Intervalo 2 (Dia)`}
-              intervaloLabel={`${fmtDay(result.i2Start)}`}
-              ranking={result.i2.ranking}
-              media={result.i2.media}
-              total={result.i2.totalGeral}
-              separadoresAtivos={result.i2.separadoresAtivos}
-              meta={meta}
-            />
+            {result.i1 && result.i1Start && (
+              <ChartReport
+                kind="hora"
+                headerTitle={`Produtividade por Hora - Separação - Zona (${zonaLabel})`}
+                chartTitle={`Desempenho por separador (prod/h) - Intervalo 1 (Hora)`}
+                intervaloLabel={`${fmtDay(result.i1Start)} ${h1Start} às ${h1End}`}
+                ranking={result.i1.ranking}
+                media={result.i1.media}
+                total={result.i1.totalGeral}
+                separadoresAtivos={result.i1.separadoresAtivos}
+                meta={meta}
+              />
+            )}
+            {result.i2 && result.i2Start && (
+              <ChartReport
+                kind="dia"
+                headerTitle={`Produtividade por Dia - Separação - Zona (${zonaLabel})`}
+                chartTitle={`Desempenho por separador (prod/h) - Intervalo 2 (Dia)`}
+                intervaloLabel={`${fmtDay(result.i2Start)}`}
+                ranking={result.i2.ranking}
+                media={result.i2.media}
+                total={result.i2.totalGeral}
+                separadoresAtivos={result.i2.separadoresAtivos}
+                meta={meta}
+              />
+            )}
           </>
           );
         })()}
