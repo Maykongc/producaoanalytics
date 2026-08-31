@@ -22,6 +22,7 @@ export const Route = createFileRoute("/")({
 });
 
 function Index() {
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [fileName, setFileName] = useState<string>("");
   const [sheets, setSheets] = useState<string[]>([]);
   const [rowsBySheet, setRowsBySheet] = useState<Record<string, Record<string, unknown>[]>>({});
@@ -141,6 +142,18 @@ function Index() {
   function limpar() {
     setCalculated(false);
     setError("");
+    setFileName("");
+    setSheets([]);
+    setRowsBySheet({});
+    setSelectedSheet("");
+    setPrepared(null);
+    setZonaSel([]);
+    setFuncionarioSel([]);
+    setH1Start("");
+    setH1End("");
+    setD2Start("");
+    setD2End("");
+    if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
   return (
@@ -167,6 +180,7 @@ function Index() {
               <label className="mb-1 block text-xs font-medium text-muted-foreground">Arquivo Excel</label>
               <label className="flex h-10 cursor-pointer items-center gap-2 rounded-md border bg-background px-3 text-sm hover:bg-accent">
                 <input
+                  ref={fileInputRef}
                   type="file"
                   accept=".xlsx,.xls"
                   className="hidden"
