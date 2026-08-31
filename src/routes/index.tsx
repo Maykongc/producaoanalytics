@@ -108,15 +108,28 @@ function Index() {
 
   const result = useMemo(() => {
     if (!prepared || !calculated) return null;
+    const rows = prepared.rows.filter((r) =>
+      (zonaSel.length === 0 || zonaSel.includes(r.zona ?? "")) &&
+      (funcionarioSel.length === 0 || funcionarioSel.includes(r.separador ?? "")),
+    );
+
+    if (dateMode !== "dia") {
+      const range = resolveRange(dateMode, month, rangeStart, rangeEnd);
+      if (!range) return { err: dateMode === "mes" ? "Selecione o mês." : "Selecione a data inicial e final do período." };
+      if (range.start > range.end) return { err: "A data inicial deve ser anterior à final." };
+      return {
+        i1: null, i2: null,
+        i1Start: null, i1End: null, i2Start: null, i2End: null,
+        ip: rankByInterval(rows, range.start, range.end),
+        ipStart: range.start, ipEnd: range.end,
+      };
+    }
+
     const has1 = Boolean(h1Start && h1End);
     const has2 = Boolean(d2Start && d2End);
     if (!has1 && !has2) return { err: "Preencha os horários de pelo menos um intervalo." };
     if (has1 && h1Start >= h1End) return { err: "Intervalo 1: hora inicial deve ser menor que a final" };
     if (has2 && d2Start >= d2End) return { err: "Intervalo 2: hora inicial deve ser menor que a final" };
-    const rows = prepared.rows.filter((r) =>
-      (zonaSel.length === 0 || zonaSel.includes(r.zona ?? "")) &&
-      (funcionarioSel.length === 0 || funcionarioSel.includes(r.separador ?? "")),
-    );
     const i1Start = has1 ? combineDateAndTime(date, h1Start) : null;
     const i1End = has1 ? combineDateAndTime(date, h1End) : null;
     const i2Start = has2 ? combineDateAndTime(date, d2Start) : null;
@@ -125,14 +138,26 @@ function Index() {
       i1: i1Start && i1End ? rankByInterval(rows, i1Start, i1End) : null,
       i2: i2Start && i2End ? rankByInterval(rows, i2Start, i2End) : null,
       i1Start, i1End, i2Start, i2End,
+      ip: null, ipStart: null, ipEnd: null,
     };
-  }, [prepared, calculated, date, h1Start, h1End, d2Start, d2End, zonaSel, funcionarioSel]);
+  }, [prepared, calculated, dateMode, date, month, rangeStart, rangeEnd, h1Start, h1End, d2Start, d2End, zonaSel, funcionarioSel]);
 
 
   function calcular() {
     setError("");
     if (!prepared) { setError("Faça o upload de um arquivo Excel primeiro."); return; }
     if (prepared.missing.length) { setError(`Colunas obrigatórias ausentes: ${prepared.missing.join(", ")}`); return; }
+    if (dateMode === "mes") {
+      if (!month) { setError("Selecione o mês."); return; }
+      setCalculated(true);
+      return;
+    }
+    if (dateMode === "periodo") {
+      if (!rangeStart || !rangeEnd) { setError("Selecione a data inicial e final do período."); return; }
+      if (rangeStart > rangeEnd) { setError("A data inicial deve ser anterior à final."); return; }
+      setCalculated(true);
+      return;
+    }
     if (!date) { setError("Selecione uma data."); return; }
     const has1 = Boolean(h1Start && h1End);
     const has2 = Boolean(d2Start && d2End);
@@ -143,6 +168,7 @@ function Index() {
     if (has2 && d2Start >= d2End) { setError("Intervalo 2: hora inicial deve ser menor que a final."); return; }
     setCalculated(true);
   }
+
 
   function limpar() {
     setCalculated(false);
