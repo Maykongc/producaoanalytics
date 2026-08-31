@@ -117,6 +117,20 @@ function Index() {
       const range = resolveRange(dateMode, month, rangeStart, rangeEnd);
       if (!range) return { err: dateMode === "mes" ? "Selecione o mês." : "Selecione a data inicial e final do período." };
       if (range.start > range.end) return { err: "A data inicial deve ser anterior à final." };
+      const p1 = Boolean(h1Start && h1End);
+      const p2 = Boolean(d2Start && d2End);
+      if (p1 && h1Start >= h1End) return { err: "Intervalo 1: hora inicial deve ser menor que a final" };
+      if (p2 && d2Start >= d2End) return { err: "Intervalo 2: hora inicial deve ser menor que a final" };
+      if (p1 || p2) {
+        return {
+          i1: p1 ? rankByInterval(filterByTimeOfDay(rows, h1Start, h1End), range.start, range.end) : null,
+          i2: p2 ? rankByInterval(filterByTimeOfDay(rows, d2Start, d2End), range.start, range.end) : null,
+          i1Start: p1 ? range.start : null, i1End: p1 ? range.end : null,
+          i2Start: p2 ? range.start : null, i2End: p2 ? range.end : null,
+          ip: null, ipStart: null, ipEnd: null,
+          rangeStartDate: range.start, rangeEndDate: range.end,
+        };
+      }
       return {
         i1: null, i2: null,
         i1Start: null, i1End: null, i2Start: null, i2End: null,
@@ -124,6 +138,7 @@ function Index() {
         ipStart: range.start, ipEnd: range.end,
       };
     }
+
 
     const has1 = Boolean(h1Start && h1End);
     const has2 = Boolean(d2Start && d2End);
